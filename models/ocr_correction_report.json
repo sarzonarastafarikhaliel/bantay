@@ -1,0 +1,72 @@
+{
+  "grid": [
+    {
+      "lm_weight": 0.0,
+      "cer_before": 0.1005,
+      "cer_after": 0.0904,
+      "cer_real_before": 0.1037,
+      "cer_real_after": 0.0988,
+      "edits": 3290,
+      "edit_precision": 0.7903,
+      "sec_per_page": 0.104
+    },
+    {
+      "lm_weight": 0.3,
+      "cer_before": 0.1005,
+      "cer_after": 0.0892,
+      "cer_real_before": 0.1037,
+      "cer_real_after": 0.1114,
+      "edits": 10332,
+      "edit_precision": 0.5873,
+      "sec_per_page": 0.805
+    },
+    {
+      "lm_weight": 0.6,
+      "cer_before": 0.1005,
+      "cer_after": 0.0926,
+      "cer_real_before": 0.1037,
+      "cer_real_after": 0.1153,
+      "edits": 10803,
+      "edit_precision": 0.5598,
+      "sec_per_page": 0.719
+    },
+    {
+      "lm_weight": 0.8,
+      "cer_before": 0.1005,
+      "cer_after": 0.0934,
+      "cer_real_before": 0.1037,
+      "cer_real_after": 0.1157,
+      "edits": 10852,
+      "edit_precision": 0.5553,
+      "sec_per_page": 0.739
+    }
+  ],
+  "best": {
+    "lm_weight": 0.3,
+    "cer_before": 0.1005,
+    "cer_after": 0.0892,
+    "cer_real_before": 0.1037,
+    "cer_real_after": 0.1114,
+    "edits": 10332,
+    "edit_precision": 0.5873,
+    "sec_per_page": 0.805
+  },
+  "n_test_pairs": 680,
+  "gemini": {
+    "n_pages": 30,
+    "n_scored": 30,
+    "backend": "vertex",
+    "model": "gemini-3.5-flash",
+    "lm_weight": 0.3,
+    "cer_corrector": 0.1114,
+    "cer_gemini": 0.0951,
+    "edits": 224,
+    "edit_precision": 0.5402,
+    "fabrications": 103,
+    "errors": 0,
+    "statuses": {
+      "ok": 30
+    },
+    "sec_per_page": 75.494
+  }
+}

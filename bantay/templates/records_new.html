@@ -1,0 +1,773 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Blotter Record #' ~ record.id if record else 'New Blotter Record' }} — BANTAY{% endblock %}
+{% block topbar_title %}{{ 'Edit Blotter Record #' ~ record.id if record else 'New Blotter Record' }}{% endblock %}
+{% block page_content %}
+
+<div class="page-header">
+  <h1>{{ 'Edit Blotter Record #' ~ record.id if record else 'New Blotter Record' }}</h1>
+  <p>{% if record %}Update the encoded details below.{% else %}Upload a scanned blotter page, or fill in the fields below by hand. Either way, SEA-LION suggests the incident type, PNP tier, and Katarungang Pambarangay referability as you go.{% endif %}</p>
+</div>
+
+{% if not record %}
+<!-- Optional scan-intake step (Section 3.2.6), embedded here instead of a separate
+     page - see routes/scan.py's run_scan_pipeline, called from
+     routes/records.py's new_record() on POST when an image is attached. -->
+<div class="card mb-4" style="margin-bottom: var(--space-5); max-width: 800px;">
+  <h5 style="margin-bottom: var(--space-2);">Scan a Blotter Page
+    <span style="font-weight: 400; color: var(--clr-muted); font-size: 0.8rem;">optional — or skip to the fields below</span></h5>
+  <p style="color: var(--clr-muted); font-size: 0.85rem; margin-bottom: var(--space-3);">
+    Upload a photo or scan of a blotter page. <strong>Google Vision</strong> reads the handwriting,
+    <strong>Gemini</strong> repairs misread words and fills the fields below, and <strong>SEA-LION</strong>
+    (local, via Ollama) suggests the incident type. Nothing is saved until you press Save Blotter Record.</p>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('records.new_record') }}" id="scan-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="image">Blotter page image</label>
+        <input class="form-control" id="image" name="image" type="file"
+               accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="backend">OCR engine <span>Google Vision is the designed path</span></label>
+        <select class="form-control" id="backend" name="backend">
+          {% for e in engines %}
+          <option value="{{ e }}" {{ 'selected' if e == default_backend }}>
+            {{ e }}{{ ' (recommended)' if e == 'gvision' }}</option>
+          {% endfor %}
+          {% if not engines %}<option value="">none installed - see requirements-ml.txt</option>{% endif %}
+        </select>
+      </div>
+    </div>
+    {% if not gemini_on %}
+    <p style="color: #b45309; font-size: 0.85rem;">
+      <strong>Repair step degraded:</strong> no Gemini backend configured, so repair falls back
+      to the local lexicon corrector and fields are filled by the regex reader only - expect more blank slots.</p>
+    {% endif %}
+    {% if not sealion_on %}
+    <p style="color: #b45309; font-size: 0.85rem;">
+      <strong>Classification degraded:</strong> SEA-LION is not reachable, so the incident type comes
+      from the legacy TF-IDF classifier instead - measured 6.7% accuracy vs SEA-LION's few-shot 67.5%,
+      so treat the suggestion as a placeholder and pick the type yourself.</p>
+    {% endif %}
+    <button class="btn btn-primary" type="submit" id="scan-submit-btn" {% if not engines %}disabled{% endif %}>Extract</button>
+    <span id="scan-status" style="display: none; color: var(--clr-muted); font-size: 0.85rem; margin-left: var(--space-2);">
+      &#9203; Scanning and extracting - Vision OCR, then Gemini repair, then SEA-LION classification. This can take a bit; please don't close the page.</span>
+  </form>
+</div>
+
+{% if result %}
+{# Two meters, one per model that produced a number. Each is a single ratio
+   against a stated limit, so a meter is the right form - not a plain number.
+   The tick is the threshold the number is judged against; the word beside
+   the percentage is what keeps the state off colour alone. Restored verbatim
+   from the pre-merge scan.html; the .conf-meter/.conf-bar CSS it needs was
+   never removed from style.css. #}
+{% macro conf_meter(label, value, threshold, caption, band_labels) %}
+  {% set pct = (value * 100) | round | int %}
+  {% set band = 'high' if value >= threshold + 0.2 else ('mid' if value >= threshold else 'low') %}
+  <div class="conf-meter conf-meter--{{ band }}">
+    <div class="conf-meter__head">
+      <span class="conf-meter__label">{{ label }}</span>
+      <span class="conf-meter__value"><strong>{{ pct }}%</strong>
+        &middot; <span class="conf-meter__state">{{ band_labels[band] }}</span></span>
+    </div>
+    <span class="conf-bar conf-bar--{{ band }}"
+          role="meter" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100"
+          aria-label="{{ label }}: {{ pct }} percent, {{ band_labels[band] }}">
+      <span class="conf-bar__fill" style="width: {{ pct }}%"></span>
+      <span class="conf-meter__mark" style="left: {{ (threshold * 100) | round | int }}%"
+            title="threshold {{ (threshold * 100) | round | int }}%"></span>
+    </span>
+    <p class="conf-meter__foot">{{ caption }}</p>
+  </div>
+{% endmacro %}
+
+<div class="card mb-4" style="margin-bottom: var(--space-5); max-width: 800px;">
+  <h5>Pipeline</h5>
+  <div class="conf-meters" style="margin-bottom: var(--space-3);">
+    {% if result.mean_conf %}
+      {% set ocr_caption %}
+        Readability: Google Vision's own mean confidence across the words it read on this
+        page. The tick marks 60%, below which the scan counts as a poor read - not whether
+        the words that came through are the right ones.
+      {% endset %}
+      {{ conf_meter("Readability (Vision OCR confidence)", result.mean_conf, 0.60, ocr_caption,
+                    {"high": "read clearly", "mid": "readable", "low": "poor read"}) }}
+    {% else %}
+      <div class="conf-meter">
+        <div class="conf-meter__head">
+          <span class="conf-meter__label">Readability (Vision OCR confidence)</span>
+          <span class="conf-meter__value">not reported</span>
+        </div>
+        <p class="conf-meter__foot">The <strong>{{ result.engine }}</strong> backend does not report per-word confidence.</p>
+      </div>
+    {% endif %}
+
+    {% if result.prediction.incident_type %}
+      {% set clf_caption %}
+        {% if result.prediction.source == 'sealion' %}
+          A coarse self-report from SEA-LION (high / medium / low), mapped to a number -
+          not a calibrated probability. The tick marks the
+          {{ (result.confidence_threshold * 100) | round | int }}% threshold a prediction
+          is judged against.
+        {% else %}
+          From the legacy TF-IDF classifier, reference-grade only - pick the type yourself.
+        {% endif %}
+      {% endset %}
+      {{ conf_meter("Classification Confidence Score", result.prediction.confidence,
+                    result.confidence_threshold, clf_caption,
+                    {"high": "confident", "mid": "unsure", "low": "unsure"}) }}
+    {% else %}
+      <div class="conf-meter">
+        <div class="conf-meter__head">
+          <span class="conf-meter__label">Classification Confidence Score</span>
+          <span class="conf-meter__value">no prediction</span>
+        </div>
+        <p class="conf-meter__foot">No classifier answered - pick the incident type yourself below.</p>
+      </div>
+    {% endif %}
+  </div>
+  <p style="color: var(--clr-muted);">
+    OCR <strong>{{ result.engine }}</strong>,
+    repair <strong>{{ result.repair_engine }}</strong> made <strong>{{ result.n_edits }}</strong> edits,
+    classifier <strong>{{ result.model }}</strong>. Total {{ result.timings_ms.total }} ms.</p>
+  <p style="color: var(--clr-muted);">Repair status: <strong>{{ result.repair_status }}</strong></p>
+  <p style="color: {{ 'var(--clr-muted)' if result.prediction.source == 'sealion' else '#b45309' }};">
+    Classifier status: <strong>{{ result.classify_status or 'not reported' }}</strong>
+    {% if result.prediction.source != 'sealion' %}
+    - SEA-LION did not answer, so this type came from {{ result.model }} (reference-grade only).
+    {% endif %}
+  </p>
+</div>
+
+<div class="card mb-4" style="margin-bottom: var(--space-5); max-width: 800px;">
+  <h5>Blotter Record Template</h5>
+  <pre style="white-space: pre-wrap; font-size: 0.85rem;">{{ result.narrative }}</pre>
+</div>
+{% endif %}
+{% endif %}
+
+<div style="max-width: 800px;">
+    <form method="post" id="record-form"
+        action="{{ url_for('records.edit_record', record_id=record.id) if record else url_for('records.new_record') }}">
+
+    <!-- Batch & Provenance -->
+    <div class="card mb-4" style="margin-bottom: var(--space-5);">
+      <h5 style="margin-bottom: var(--space-4);">Traceability</h5>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="batch_number">Batch Number <span>optional</span></label>
+          <input class="form-control" id="batch_number" name="batch_number" placeholder="e.g. BATCH-2026-001" value="{{ record.batch_number or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="encoded_by">Encoded By <span>optional</span></label>
+          <input class="form-control" id="encoded_by" name="encoded_by" placeholder="Encoder name or ID" value="{{ record.encoded_by or '' }}">
+        </div>
+      </div>
+    </div>
+
+    {% if record %}
+    <!-- Core Incident Fields - EDIT MODE: raw narrative textarea, unchanged.
+         An existing record's narrative may predate this template shape (CSV
+         import, legacy free text), so it is edited as whatever text it is
+         rather than decomposed into slots that may not exist for it. -->
+    <div class="card mb-4" style="margin-bottom: var(--space-5);">
+      <h5 style="margin-bottom: var(--space-4);">Incident Details</h5>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="date">Date</label>
+          <input class="form-control" id="date" name="date" type="date" value="{{ record.date or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="time">Time</label>
+          <input class="form-control" id="time" name="time" type="time" value="{{ record.time or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="location_purok">Purok / Location <span>counted as: {{ record.location_purok or 'Unknown' }}</span></label>
+          <input class="form-control" id="location_purok" name="location_purok" list="place-names" placeholder="e.g. Purok 3" value="{{ record.location_detail or record.location_purok or '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="status">Case Status <span>optional</span></label>
+          <input class="form-control" id="status" name="status" placeholder="e.g. Settled" value="{{ record.status or '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="narrative">Narrative <span>required</span></label>
+        <textarea class="form-control" id="narrative" name="narrative" rows="10" required
+                  placeholder="Describe the incident in detail…">{{ record.narrative or '' }}</textarea>
+      </div>
+
+      <!-- ML Prediction Preview -->
+      <div class="prediction-preview" id="prediction-preview">
+        <div class="stat-label">ML Prediction</div>
+        <div class="prediction-label" id="pred-label">—</div>
+        <div class="prediction-conf" id="pred-conf"></div>
+      </div>
+      <!-- Carries the last prediction's confidence into the Save POST - see
+           records.py's edit_record(), which otherwise has no way to learn
+           what Rerun Classifier (or the live debounced preview) just showed. -->
+      <input type="hidden" id="model_confidence" name="model_confidence"
+             value="{{ record.model_confidence if record.model_confidence is not none else '' }}">
+      <div style="margin: var(--space-2) 0 var(--space-4);">
+        <button class="btn btn--ghost btn--sm" type="button" id="rerun-predict-btn">Rerun Classifier</button>
+        <span id="rerun-predict-status" style="color: var(--clr-muted); font-size: 0.8rem; margin-left: var(--space-2);"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="action_taken">Action Taken <span>optional</span></label>
+        <textarea class="form-control" id="action_taken" name="action_taken" rows="2"
+                  placeholder="What action was taken by barangay staff?">{{ record.action_taken or '' }}</textarea>
+      </div>
+    </div>
+    {% else %}
+    <!-- Core Incident Fields - NEW RECORD MODE: the same structured slots the
+         scan step above posts (Section 3.2.6), so a manually-entered OR scanned
+         record renders through the same BLOTTER FORM template
+         (bantay/narrative.py), gets the same admin-only name redaction
+         (Section 3.2.1), and is classified by the same SEA-LION-first pipeline. -->
+    <div class="card mb-4" style="margin-bottom: var(--space-5);">
+      <h5 style="margin-bottom: var(--space-4);">Incident Details</h5>
+
+      {% if result and result.warnings %}
+      <div class="precheck">
+        <h6>&#9888; Check these before saving</h6>
+        <ul>{% for w in result.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+      </div>
+      {% endif %}
+
+      {# Grouped and labelled like the paper BLOTTER FORM (Template/Template
+         Blotter.png), so the encoder copies a page section by section. Field
+         names are narrative.SLOTS. #}
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="blotter_no">No.</label>
+          <input class="form-control" id="blotter_no" name="blotter_no"
+                 value="{{ result.fields.blotter_no if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="date_reported">Petsa ng Pagblotter <span>the record's date</span></label>
+          <input class="form-control" id="date_reported" name="date_reported" type="date"
+                 value="{{ result.fields.date_reported if result else '' }}">
+        </div>
+      </div>
+      <h6 style="margin: var(--space-4) 0 var(--space-2);">A. Nag-blo-blotter / Nagrereklamo</h6>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="reporting_party">Pangalan <span>as reported</span></label>
+          <input class="form-control" id="reporting_party" name="reporting_party" placeholder="Name"
+                 value="{{ result.fields.reporting_party if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="complainant_address">Tirahan</label>
+          <input class="form-control" id="complainant_address" name="complainant_address"
+                 value="{{ result.fields.complainant_address if result else '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="complainant_contact">Contact No.</label>
+          <input class="form-control" id="complainant_contact" name="complainant_contact"
+                 value="{{ result.fields.complainant_contact if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="complainant_age">Edad</label>
+          <input class="form-control" id="complainant_age" name="complainant_age"
+                 value="{{ result.fields.complainant_age if result else '' }}">
+        </div>
+      </div>
+      <h6 style="margin: var(--space-4) 0 var(--space-2);">B. Inirereklamo</h6>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="respondent">Pangalan <span>as reported</span></label>
+          <input class="form-control" id="respondent" name="respondent" placeholder="Name"
+                 value="{{ result.fields.respondent if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="respondent_address">Tirahan</label>
+          <input class="form-control" id="respondent_address" name="respondent_address"
+                 value="{{ result.fields.respondent_address if result else '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="respondent_contact">Contact No.</label>
+          <input class="form-control" id="respondent_contact" name="respondent_contact"
+                 value="{{ result.fields.respondent_contact if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="respondent_age">Edad</label>
+          <input class="form-control" id="respondent_age" name="respondent_age"
+                 value="{{ result.fields.respondent_age if result else '' }}">
+        </div>
+      </div>
+      <div class="form-hint" style="margin-bottom: var(--space-3);">
+        Names, addresses and contact numbers are stored with the record for barangay case
+        handling. Shown in full only to administrator accounts elsewhere in the system — every
+        other role sees these masked.
+      </div>
+      <h6 style="margin: var(--space-4) 0 var(--space-2);">C. Reklamo</h6>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="complaint">Reklamo <span>as written</span></label>
+          <input class="form-control" id="complaint" name="complaint" placeholder="e.g. Pananakit"
+                 value="{{ result.fields.complaint if result else '' }}">
+        </div>
+      </div>
+      <h6 style="margin: var(--space-4) 0 var(--space-2);">D. Kaganapan ng Pangyayari</h6>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="date">Petsa</label>
+          <input class="form-control" id="date" name="date" type="date"
+                 value="{{ result.fields.date if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="time">Oras</label>
+          <input class="form-control" id="time" name="time" type="time"
+                 value="{{ result.fields.time if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="location_purok">Lugar <span>no purok here? the parties' purok is used for the record</span></label>
+          <input class="form-control" id="location_purok" name="location_purok" list="place-names" placeholder="e.g. Purok 3"
+                 value="{{ result.fields.location_purok if result else '' }}">
+        </div>
+      </div>
+      <h6 style="margin: var(--space-4) 0 var(--space-2);">E. Salaysay</h6>
+      <div class="form-group">
+        <label class="form-label" for="incident_summary">Salaysay <span>required</span></label>
+        <textarea class="form-control" id="incident_summary" name="incident_summary" rows="6" required
+                  placeholder="Describe the incident in detail…">{{ result.fields.incident_summary if result else '' }}</textarea>
+      </div>
+      <h6 style="margin: var(--space-4) 0 var(--space-2);">Lagda ng Sumulat ng Salaysay</h6>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="statement_writer">Pangalan ng Sumulat ng Salaysay</label>
+          <input class="form-control" id="statement_writer" name="statement_writer"
+                 value="{{ result.fields.statement_writer if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="statement_date">Petsa</label>
+          <input class="form-control" id="statement_date" name="statement_date" type="date"
+                 value="{{ result.fields.statement_date if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="statement_time">Oras</label>
+          <input class="form-control" id="statement_time" name="statement_time" type="time"
+                 value="{{ result.fields.statement_time if result else '' }}">
+        </div>
+      </div>
+      <h6 style="margin: var(--space-4) 0 var(--space-2);">(Mga) Testigo</h6>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="witness">Pangalan</label>
+          <input class="form-control" id="witness" name="witness"
+                 value="{{ result.fields.witness if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="witness_age">Edad</label>
+          <input class="form-control" id="witness_age" name="witness_age"
+                 value="{{ result.fields.witness_age if result else '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="witness_address">Tirahan</label>
+          <input class="form-control" id="witness_address" name="witness_address"
+                 value="{{ result.fields.witness_address if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="witness_contact">Contact No.</label>
+          <input class="form-control" id="witness_contact" name="witness_contact"
+                 value="{{ result.fields.witness_contact if result else '' }}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="desk_officer">Pangalan ng Barangay Desk Officer / Imbestigador</label>
+          <input class="form-control" id="desk_officer" name="desk_officer"
+                 value="{{ result.fields.desk_officer if result else '' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="status">Katayuan <span>not on the paper form</span></label>
+          <input class="form-control" id="status" name="status" placeholder="e.g. Settled"
+                 value="{{ result.fields.status if result else '' }}">
+        </div>
+      </div>
+
+      <!-- Live classification + legal screening preview, same signals the
+           scan step above shows once OCR finishes (routes/scan.py step 4);
+           pre-filled server-side here when a scan already ran. -->
+      <div class="prediction-preview visible" id="prediction-preview">
+        <div class="stat-label">Incident Type <span id="pred-source" style="font-weight: 400;">{% if result and result.prediction.incident_type %}{{ '(SEA-LION)' if result.prediction.source == 'sealion' else '(fallback: legacy TF-IDF, reference only)' }}{% endif %}</span></div>
+        <div class="prediction-label" id="pred-label">{{ result.prediction.incident_type if result and result.prediction.incident_type else '—' }}</div>
+        <div class="prediction-conf" id="pred-conf">{% if result and result.prediction.incident_type %}Confidence Score: {{ (result.prediction.confidence * 100)|round(1) }}%{% endif %}</div>
+        <p id="pred-reason" style="color: var(--clr-muted); font-size: 0.8rem; margin-top: var(--space-1);">{% if result and result.prediction.reason %}Reason: {{ result.prediction.reason }}{% endif %}</p>
+        {# Model picker. Only the five checkpoints Chapter 4 measured are offered,
+           with their dev-split accuracy shown, so a different answer can be read
+           against how accurate that model actually was. Changing it re-runs the
+           classification; the record still needs encoder confirmation either way. #}
+        {% if models %}
+        <div class="form-group" style="margin-top: var(--space-2);">
+          <label class="form-label" for="pred-model" style="font-size: 0.78rem;">Classifier model</label>
+          <select class="form-control" id="pred-model" style="font-size: 0.82rem;">
+            {% for m in models %}
+            <option value="{{ m.tag }}" {% if m.tag == active_model %}selected{% endif %}>
+              {{ m.label }} — {{ (m.type_acc * 100)|round(1) }}% type / {{ (m.group_acc * 100)|round(1) }}% group
+            </option>
+            {% endfor %}
+          </select>
+          <p style="color: var(--clr-muted); font-size: 0.72rem; margin-top: 4px;">
+            Accuracy measured on the 151-record dev split (Chapter 4). Switching models re-runs the suggestion only — it never changes a saved record.
+          </p>
+        </div>
+        {% endif %}
+        <div class="form-row" style="margin-top: var(--space-3);">
+          <div class="form-group">
+            <label class="form-label" for="category_group">Category Group <span>editable — override if wrong</span></label>
+            <select class="form-control" id="category_group" name="category_group">
+              <option value="">— use model prediction —</option>
+              {% for g in category_groups %}
+              <option value="{{ g }}" {{ 'selected' if result and result.prediction.category_group == g }}>{{ g }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pnp_classification">PNP Classification <span>editable — override if wrong</span></label>
+            <select class="form-control" id="pnp_classification" name="pnp_classification">
+              <option value="">— use model prediction —</option>
+              {% for t in pnp_tiers %}
+              <option value="{{ t }}" {{ 'selected' if result and result.pnp_tier == t }}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="kp_status">Katarungang Pambarangay <span>editable — override if wrong</span></label>
+            <select class="form-control" id="kp_status" name="kp_status">
+              <option value="">— use model prediction —</option>
+              {% for s in kp_statuses %}
+              <option value="{{ s }}" {{ 'selected' if result and result.kp_status == s }}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <p id="pred-kp-note" style="color: var(--clr-muted); font-size: 0.8rem; margin-top: var(--space-2);">{{ result.kp_note if result else '' }}</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="action_taken">Aksyong Ginawa <span>action taken - not on the paper form</span></label>
+        <textarea class="form-control" id="action_taken" name="action_taken" rows="2"
+                  placeholder="What action was taken by barangay staff?">{{ result.fields.action_taken if result else '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="narrative">
+          Narrative as it will be stored
+          <span>rendered from the fields above - edit the fields, not this box</span></label>
+        <textarea class="form-control" id="narrative" name="narrative" rows="20" readonly></textarea>
+      </div>
+
+      {% if result %}
+      <input type="hidden" name="review_status" value="{{ result.review_status }}">
+      <input type="hidden" name="model_confidence" value="{{ result.prediction.confidence or '' }}">
+      <input type="hidden" name="source_file_page" value="{{ result.source_file_page }}">
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Incident Classification -->
+    <div class="card mb-4" style="margin-bottom: var(--space-5);">
+      <h5 style="margin-bottom: var(--space-4);">Incident Classification</h5>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="incident_type_primary">Primary Type <span>auto-filled by SEA-LION</span></label>
+          <select class="form-control" id="incident_type_primary" name="incident_type_primary">
+            <option value="">— use model prediction —</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {{ 'selected' if (record and record.incident_type_primary == c) or (result and result.prediction.incident_type == c) }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="incident_type_secondary">Secondary Type <span>optional overlap</span></label>
+          <select class="form-control" id="incident_type_secondary" name="incident_type_secondary">
+            <option value="">None</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {{ 'selected' if record and record.incident_type_secondary == c }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% if record %}
+      <div class="form-row" style="margin-top: var(--space-3);">
+        <div class="form-group">
+          <label class="form-label" for="category_group">Category Group <span>editable — override if wrong</span></label>
+          <select class="form-control" id="category_group" name="category_group">
+            <option value="">— use model prediction —</option>
+            {% for g in category_groups %}
+            <option value="{{ g }}" {{ 'selected' if record.category_group == g }}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pnp_classification">PNP Classification <span>editable — override if wrong</span></label>
+          <select class="form-control" id="pnp_classification" name="pnp_classification">
+            <option value="">— use model prediction —</option>
+            {% for t in pnp_tiers %}
+            <option value="{{ t }}" {{ 'selected' if record.pnp_classification == t }}>{{ t }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="kp_status">Katarungang Pambarangay <span>editable — override if wrong</span></label>
+          <select class="form-control" id="kp_status" name="kp_status">
+            <option value="">— use model prediction —</option>
+            {% for s in kp_statuses %}
+            <option value="{{ s }}" {{ 'selected' if record.kp_status == s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Privacy -->
+    <div class="card mb-4" style="margin-bottom: var(--space-5);">
+      <h5 style="margin-bottom: var(--space-4);">Privacy</h5>
+      <div class="form-group">
+        <label class="form-label" for="remarks">Remarks <span>optional</span></label>
+        <input class="form-control" id="remarks" name="remarks" placeholder="Additional notes"
+               value="{{ record.remarks if record else ('Scanned from ' ~ result.source_file_page ~ ' via ' ~ result.engine ~ '; repaired by ' ~ result.repair_engine ~ '; ' ~ result.n_edits ~ ' corrections applied.' if result else '') }}">
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <button class="btn btn--primary" id="save-btn" type="submit">{{ 'Save Changes' if record else 'Save Blotter Record' }}</button>
+      <a class="btn btn--ghost" href="{{ url_for('records.view_record', record_id=record.id) if record else url_for('records.list_records') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<datalist id="place-names">
+  {% for name in place_names() %}<option value="{{ name }}">{% endfor %}
+</datalist>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // One click, one POST - same guard as the scan draft form. The server-side
+  // replay check in routes/records.py catches whatever still slips through.
+  var saveBtn = document.getElementById('save-btn');
+  if (saveBtn && saveBtn.form) {
+    saveBtn.form.addEventListener('submit', function () {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+    });
+  }
+
+  // Scan/extract is a synchronous multi-second OCR -> repair -> classify
+  // pipeline (routes/scan.py's run_scan_pipeline) behind a full-page POST, so
+  // the only loading feedback available is disabling the button and showing
+  // a status line before the browser navigates away to the result.
+  var scanForm   = document.getElementById('scan-form');
+  var scanBtn    = document.getElementById('scan-submit-btn');
+  var scanStatus = document.getElementById('scan-status');
+  if (scanForm && scanBtn) {
+    scanForm.addEventListener('submit', function () {
+      scanBtn.disabled = true;
+      scanBtn.textContent = 'Scanning...';
+      if (scanStatus) scanStatus.style.display = 'inline';
+    });
+  }
+
+  {% if record %}
+  // --- Edit mode: raw-narrative live prediction preview (unchanged) ---
+  var narrativeEl  = document.getElementById('narrative');
+  var dateEl       = document.getElementById('date');
+  var timeEl       = document.getElementById('time');
+  var purokEl      = document.getElementById('location_purok');
+  var preview      = document.getElementById('prediction-preview');
+  var predLabel    = document.getElementById('pred-label');
+  var predConf     = document.getElementById('pred-conf');
+  var confidenceEl = document.getElementById('model_confidence');
+  var primarySel   = document.getElementById('incident_type_primary');
+  var modelSel     = document.getElementById('pred-model');
+  function chosenModel() { return modelSel ? modelSel.value : ''; }
+
+  var debounceTimer;
+  var rerunBtn    = document.getElementById('rerun-predict-btn');
+  var rerunStatus = document.getElementById('rerun-predict-status');
+
+  function runPrediction(onDone) {
+    var text = narrativeEl.value.trim();
+    if (text.length < 20) {
+      preview.classList.remove('visible');
+      if (onDone) onDone(false);
+      return;
+    }
+    fetch('{{ url_for("records.predict") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        narrative: text,
+        date: dateEl.value,
+        time: timeEl.value,
+        location_purok: purokEl.value,
+        model: chosenModel(),
+      }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.label) { preview.classList.remove('visible'); if (onDone) onDone(false); return; }
+      predLabel.textContent = data.label;
+      predConf.textContent  = 'Confidence Score: ' + (data.confidence * 100).toFixed(1) + '% — ' + data.review;
+      preview.classList.add('visible');
+      if (confidenceEl) confidenceEl.value = data.confidence;
+      if (!primarySel.value) {
+        for (var i = 0; i < primarySel.options.length; i++) {
+          if (primarySel.options[i].value === data.label) {
+            primarySel.selectedIndex = i;
+            break;
+          }
+        }
+      }
+      if (onDone) onDone(true);
+    })
+    .catch(function() { preview.classList.remove('visible'); if (onDone) onDone(false); });
+  }
+
+  function fetchPrediction() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() { runPrediction(); }, 600);
+  }
+
+  narrativeEl.addEventListener('input', fetchPrediction);
+  dateEl.addEventListener('change', fetchPrediction);
+  timeEl.addEventListener('change', fetchPrediction);
+  purokEl.addEventListener('input', fetchPrediction);
+  if (modelSel) modelSel.addEventListener('change', fetchPrediction);
+
+  // Manual re-run: no debounce, no dependency on the narrative field having
+  // just changed - for the case where the text was corrected some other way
+  // (e.g. edited directly, or pasted in) and the stored prediction is stale.
+  if (rerunBtn) {
+    rerunBtn.addEventListener('click', function() {
+      clearTimeout(debounceTimer);
+      rerunBtn.disabled = true;
+      rerunStatus.textContent = 'Classifying…';
+      runPrediction(function(ok) {
+        rerunBtn.disabled = false;
+        rerunStatus.textContent = ok ? 'Updated just now.' : 'Could not classify - is the narrative at least 20 characters, and is the classifier reachable?';
+      });
+    });
+  }
+
+  {% else %}
+  // --- New record mode: structured slots. The live preview fills the very
+  // template string narrative.render() uses (passed in below), so the box the
+  // encoder reads cannot drift from the text the server stores on POST. ---
+  (function () {
+    var slots = {{ narrative_slots | tojson }};
+    var TEMPLATE = {{ narrative_template | tojson }};
+    var box = document.getElementById('narrative');
+    var BLANK = {{ blank_marker | tojson }};
+
+    function val(id) {
+      var el = document.getElementById(id);
+      return (el && el.value.trim()) || BLANK;
+    }
+    function renderNarrative() {
+      box.value = TEMPLATE.replace(/\{(\w+)\}/g, function (_, id) { return val(id); });
+    }
+    slots.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', renderNarrative);
+    });
+    renderNarrative();
+
+    // Live SEA-LION (or TF-IDF fallback) classification + PNP/KP screening -
+    // same priority order and derived fields the scan step above shows, see
+    // routes/records.py's predict()/_classify_narrative and routes/scan.py step 4.
+    // Only needed for further edits after a scan, or for pure manual entry -
+    // a scan's own result is already rendered server-side above.
+    var summaryEl    = document.getElementById('incident_summary');
+    var dateEl       = document.getElementById('date');
+    var timeEl       = document.getElementById('time');
+    var purokEl      = document.getElementById('location_purok');
+    var predLabel    = document.getElementById('pred-label');
+    var predConf     = document.getElementById('pred-conf');
+    var predSource   = document.getElementById('pred-source');
+    var predReason   = document.getElementById('pred-reason');
+    var predCategory = document.getElementById('category_group');
+    var predPnpTier  = document.getElementById('pnp_classification');
+    var predKpStatus = document.getElementById('kp_status');
+    var predKpNote   = document.getElementById('pred-kp-note');
+    // Selects double as the encoder's override - only overwrite a slot the
+    // encoder hasn't already touched (still on "use model prediction").
+    function setAuto(sel, value) { if (!sel.dataset.userSet) sel.value = value || ''; }
+    [predCategory, predPnpTier, predKpStatus].forEach(function (sel) {
+      sel.addEventListener('change', function () { sel.dataset.userSet = '1'; });
+    });
+    var primarySel   = document.getElementById('incident_type_primary');
+    var modelSel     = document.getElementById('pred-model');
+    function chosenModel() { return modelSel ? modelSel.value : ''; }
+
+    var debounceTimer;
+    function fetchPrediction() {
+      var text = summaryEl.value.trim();
+      if (text.length < 20) {
+        predLabel.textContent = '—'; predConf.textContent = ''; predSource.textContent = ''; predReason.textContent = '';
+        setAuto(predCategory, ''); setAuto(predPnpTier, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
+        return;
+      }
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () {
+        fetch('{{ url_for("records.predict") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            narrative: text,
+            date: dateEl.value,
+            time: timeEl.value,
+            location_purok: purokEl.value,
+            model: chosenModel(),
+          }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.label) {
+            predLabel.textContent = 'No prediction';
+            predConf.textContent = 'SEA-LION and the fallback classifier both had nothing to offer - pick the type yourself.';
+            predSource.textContent = ''; predReason.textContent = '';
+            setAuto(predCategory, ''); setAuto(predPnpTier, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
+            return;
+          }
+          predLabel.textContent = data.label;
+          predConf.textContent = 'Confidence Score: ' + (data.confidence * 100).toFixed(1) + '% — ' + data.review;
+          predSource.textContent = data.source === 'sealion' ? '(' + (data.model || 'SEA-LION') + ')' : '(fallback: legacy TF-IDF, reference only)';
+          predReason.textContent = data.reason ? 'Reason: ' + data.reason : '';
+          setAuto(predCategory, data.category_group);
+          setAuto(predPnpTier, data.pnp_tier);
+          setAuto(predKpStatus, data.kp_status);
+          predKpNote.textContent = data.kp_note || '';
+          if (!primarySel.value) {
+            for (var i = 0; i < primarySel.options.length; i++) {
+              if (primarySel.options[i].value === data.label) {
+                primarySel.selectedIndex = i;
+                break;
+              }
+            }
+          }
+        })
+        .catch(function () {});
+      }, 600);
+    }
+
+    summaryEl.addEventListener('input', fetchPrediction);
+    dateEl.addEventListener('change', fetchPrediction);
+    timeEl.addEventListener('change', fetchPrediction);
+    purokEl.addEventListener('input', fetchPrediction);
+    if (modelSel) modelSel.addEventListener('change', fetchPrediction);
+  })();
+  {% endif %}
+</script>
+{% endblock %}

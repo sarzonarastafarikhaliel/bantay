@@ -1,0 +1,92 @@
+{
+  "split": "dev",
+  "n": 58,
+  "types": [
+    "Robbery",
+    "Theft",
+    "Slight Physical Injury",
+    "Physical Injury",
+    "Lost Property / Document",
+    "Ejectment",
+    "RA 9262 (VAWC)",
+    "Online Defamation / Threat",
+    "Oral Defamation",
+    "Marital Relation",
+    "Malicious Mischief / Property Damage",
+    "Property Claim / Damage",
+    "Grave Threats / Light Threats",
+    "Unjust Vexation",
+    "Alarms and Scandals",
+    "Trespassing",
+    "Noise Complaint",
+    "Neighbor Dispute",
+    "Estafa (Swindling)",
+    "Boundary Dispute",
+    "Animal-Related Incident",
+    "Coercion",
+    "Using Fictitious Names / False Certificates",
+    "Breach of Contract",
+    "Demand for Specific Performance",
+    "Family/Sibling Dispute",
+    "Child Custody-Adjacent Concern",
+    "Vehicular Incident",
+    "Public Disturbance",
+    "Drug-Related Concern",
+    "Missing Person Report",
+    "Referral to Police/Other Agency",
+    "Collection of Sum of Money",
+    "Peeping/Voyeurism",
+    "Others / Miscellaneous"
+  ],
+  "groups": [
+    "Administrative/Referral",
+    "Catch-all",
+    "Civil Dispute",
+    "Community Disturbance",
+    "Criminal/Penal Code",
+    "Family/Domestic",
+    "Property/Lost Items"
+  ],
+  "runs": [
+    {
+      "tag": "gemma4:e4b",
+      "safe": "gemma4_e4b",
+      "seconds": 1117.0,
+      "acc": 0.6896551724137931,
+      "reconstructed": 58,
+      "n_null": 0
+    },
+    {
+      "tag": "aisingapore/llama-sea-lion-v3.5-8b-r",
+      "safe": "aisingapore_llama-sea-lion-v3_5-8b-r",
+      "seconds": 1431.6,
+      "acc": 0.6724137931034483,
+      "reconstructed": 58,
+      "n_null": 0
+    },
+    {
+      "tag": "aisingapore/Gemma-SEA-LION-v3-9B-IT:q4_k_m",
+      "safe": "aisingapore_gemma-sea-lion-v3-9b-it_q4_k_m",
+      "seconds": 562.1,
+      "acc": 0.4827586206896552,
+      "reconstructed": 58,
+      "n_null": 0
+    },
+    {
+      "tag": "aisingapore/Gemma-SEA-LION-v4-4B-VL",
+      "safe": "aisingapore_gemma-sea-lion-v4-4b-vl",
+      "seconds": 258.6,
+      "acc": 0.4827586206896552,
+      "reconstructed": 58,
+      "n_null": 0
+    },
+    {
+      "tag": "aisingapore/Gemma-SEA-LION-v4.5-E2B-IT",
+      "safe": "aisingapore_gemma-sea-lion-v4_5-e2b-it",
+      "seconds": 1000.7,
+      "acc": 0.43103448275862066,
+      "reconstructed": 58,
+      "n_null": 0
+    }
+  ]
+}

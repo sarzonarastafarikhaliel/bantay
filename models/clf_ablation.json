@@ -1,0 +1,18 @@
+{
+  "dapt": {
+    "base": "E:\\College\\4TH Year\\BANTAY Prototype\\models\\xlmr_dapt",
+    "best_val_macro_f1_type": 0.1537,
+    "epochs": 8,
+    "n_train": 4242,
+    "n_val": 39,
+    "n_types": 35
+  },
+  "base": {
+    "base": "xlm-roberta-base",
+    "best_val_macro_f1_type": 0.1054,
+    "epochs": 8,
+    "n_train": 4242,
+    "n_val": 39,
+    "n_types": 35
+  }
+}

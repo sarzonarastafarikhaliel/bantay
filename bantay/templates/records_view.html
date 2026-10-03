@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}View Blotter Record #{{ record.id }} — BANTAY{% endblock %}
+{% block topbar_title %}Blotter Record #{{ record.id }}{% endblock %}
+
+{% block page_content %}
+<div class="page-header flex items-center justify-between" style="margin-bottom: var(--space-4);">
+  <div>
+    <a href="{{ request.referrer or url_for('records.list_records') }}" class="btn btn--ghost btn--sm" style="margin-bottom: var(--space-2); display: inline-flex; align-items: center; gap: var(--space-2);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </a>
+    <h1 style="display: flex; align-items: center; gap: var(--space-3);">
+      Record #{{ record.id }}
+      {% if record.review_status == 'accepted' %}
+        <span class="badge badge--accepted" style="font-size: var(--font-size-sm); font-weight: 500;">Accepted</span>
+      {% elif record.review_status == 'needs_review' %}
+        <span class="badge badge--needs-review" style="font-size: var(--font-size-sm); font-weight: 500;">Needs Review</span>
+      {% else %}
+        <span class="badge badge--corrected" style="font-size: var(--font-size-sm); font-weight: 500;">Corrected</span>
+      {% endif %}
+    </h1>
+  </div>
+  <div class="flex gap-2">
+    <a href="{{ url_for('records.export_record_docx', record_id=record.id) }}" class="btn btn--ghost">
+      Download .docx
+    </a>
+    {% if current_user.role in ('reviewer', 'admin') %}
+    {% if record.review_status == 'needs_review' %}
+    <a href="{{ url_for('review.resolve', record_id=record.id) }}" class="btn btn--primary">
+      Review Record
+    </a>
+    {% endif %}
+    <a href="{{ url_for('records.edit_record', record_id=record.id) }}" class="btn btn--ghost">
+      Edit
+    </a>
+    {% endif %}
+    {% if current_user.role == 'admin' %}
+    <form method="post" action="{{ url_for('records.delete_record', record_id=record.id) }}" onsubmit="return confirm('Permanently delete this record?');">
+      <button class="btn btn--danger" type="submit">Delete</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  
+  <!-- Main Narrative -->
+  <div class="card flex flex-col" style="gap: var(--space-4);">
+    <div>
+      <h3 style="color: var(--clr-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-2);">Narrative / Summary</h3>
+      <p style="font-size: var(--font-size-base); line-height: 1.6; white-space: pre-wrap;">{{ record.narrative|visible_narrative or "No narrative provided." }}</p>
+    </div>
+    
+    <div style="border-top: 1px solid var(--clr-border); padding-top: var(--space-4);">
+      <h3 style="color: var(--clr-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-2);">Action Taken</h3>
+      <p style="font-size: var(--font-size-sm); line-height: 1.5; white-space: pre-wrap;">{{ record.action_taken or "None recorded." }}</p>
+    </div>
+
+    {% if record.remarks %}
+    <div style="border-top: 1px solid var(--clr-border); padding-top: var(--space-4);">
+      <h3 style="color: var(--clr-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-2);">Remarks</h3>
+      <p style="font-size: var(--font-size-sm); line-height: 1.5; white-space: pre-wrap;">{{ record.remarks }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Metadata Sidebar -->
+  <div class="flex flex-col gap-4">
+    <div class="card">
+      <h3 style="color: var(--clr-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-3);">Classification</h3>
+      
+      <div style="margin-bottom: var(--space-3);">
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-bottom: 2px;">Primary Type</div>
+        <div style="font-weight: 500;">{{ record.incident_type_primary or "—" }}</div>
+      </div>
+      
+      <div style="margin-bottom: var(--space-3);">
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-bottom: 2px;">Secondary Type</div>
+        <div>{{ record.incident_type_secondary or "—" }}</div>
+      </div>
+
+      <div style="margin-bottom: var(--space-3);">
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-bottom: 2px;">PNP Classification</div>
+        <div class="flex items-center gap-2">
+          {% if pnp_tier == 'Index Crime' %}
+            <span class="badge badge--needs-review">{{ pnp_tier }}</span>
+          {% elif pnp_tier == 'Non-Index Crime' %}
+            <span class="badge badge--corrected">{{ pnp_tier }}</span>
+          {% elif pnp_tier == 'Non-Criminal Complaint' %}
+            <span class="badge badge--accepted">{{ pnp_tier }}</span>
+          {% else %}
+            <span class="badge">{{ pnp_tier }}</span>
+          {% endif %}
+        </div>
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-top: 4px;">{{ legal_basis }}</div>
+      </div>
+
+      <div style="margin-bottom: var(--space-3);">
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-bottom: 2px;">Category Group</div>
+        <span class="badge">{{ category_group or "—" }}</span>
+      </div>
+
+      <div style="margin-bottom: var(--space-3);">
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-bottom: 2px;">Katarungang Pambarangay</div>
+        <div class="flex items-center gap-2">
+          {% if kp_status == 'KP-Mediable' %}
+            <span class="badge badge--accepted">{{ kp_status }}</span>
+          {% elif kp_status == 'Conditional' %}
+            <span class="badge badge--needs-review">{{ kp_status }}</span>
+          {% elif kp_status == 'Excluded' %}
+            <span class="badge badge--corrected">{{ kp_status }}</span>
+          {% else %}
+            <span class="badge">{{ kp_status or "—" }}</span>
+          {% endif %}
+        </div>
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-top: 4px;">{{ kp_note }}</div>
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-top: 4px; font-style: italic;">
+          Screening reference only. Certification to file action remains the Lupon Chairman's determination.
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-bottom: 4px;">Model Confidence</div>
+        {% if record.model_confidence is not none %}
+          {% set pct = (record.model_confidence * 100)|int %}
+          <div class="flex items-center gap-2">
+            <div style="flex-grow: 1; height: 6px; background: var(--clr-bg); border-radius: 999px; overflow: hidden;">
+              {% if record.model_confidence >= 0.6 %}
+                <div style="height: 100%; width: {{ pct }}%; background: var(--clr-success);"></div>
+              {% elif record.model_confidence >= 0.3 %}
+                <div style="height: 100%; width: {{ pct }}%; background: var(--clr-warning);"></div>
+              {% else %}
+                <div style="height: 100%; width: {{ pct }}%; background: var(--clr-danger);"></div>
+              {% endif %}
+            </div>
+            <span style="font-size: var(--font-size-xs); font-variant-numeric: tabular-nums;">{{ pct }}%</span>
+          </div>
+        {% else %}
+          <div style="font-size: var(--font-size-sm);">—</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="color: var(--clr-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-3);">Details</h3>
+      
+      <table style="width: 100%; font-size: var(--font-size-sm);">
+        <tbody>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted); width: 40%;">Date</td>
+            <td style="padding: 4px 0; font-weight: 500;">{{ record.date or "—" }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted);">Time</td>
+            <td style="padding: 4px 0;">{{ record.time or "—" }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted);">Purok</td>
+            <td style="padding: 4px 0;">{{ record.location_purok or "—" }}{% if record.location_detail and record.location_detail != record.location_purok %} <span style="color: var(--clr-muted);">({{ record.location_detail }})</span>{% endif %}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted);">Status</td>
+            <td style="padding: 4px 0;">{{ record.status or "—" }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted);">Readability</td>
+            <td style="padding: 4px 0;">{{ record.readability or "—" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3 style="color: var(--clr-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-3);">Provenance</h3>
+      
+      <table style="width: 100%; font-size: var(--font-size-sm);">
+        <tbody>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted); width: 40%;">Batch</td>
+            <td style="padding: 4px 0; font-family: monospace;">{{ record.batch_number or "—" }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted);">Source</td>
+            <td style="padding: 4px 0;">{{ record.source_file_page or "—" }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted);">Encoded By</td>
+            <td style="padding: 4px 0;">{{ record.encoded_by or "—" }}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: var(--clr-muted);">Encoded On</td>
+            <td style="padding: 4px 0;">{{ record.date_encoded or "—" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

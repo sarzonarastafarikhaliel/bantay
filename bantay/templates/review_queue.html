@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Review Queue — BANTAY{% endblock %}
+{% block topbar_title %}Review Queue{% endblock %}
+{% block page_content %}
+
+<div class="page-header">
+  <h1>Needs Review</h1>
+  <p>{{ records|length }} record{{ 's' if records|length != 1 }} awaiting staff verification.</p>
+</div>
+
+{% if records %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Purok</th>
+        <th>Narrative</th>
+        <th>ML Suggestion</th>
+        <th>Confidence</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr>
+        <td class="td-muted" style="white-space: nowrap;">{{ r.date or '—' }}</td>
+        <td class="td-muted" style="white-space: nowrap;">{{ r.location_purok or '—' }}</td>
+        <td class="td-truncate" style="max-width: 260px;">{{ r.narrative[:110] }}</td>
+        <td style="font-size: var(--font-size-xs);">
+          {% if r.incident_type_primary %}
+            {{ r.incident_type_primary }}
+            {% if r.incident_type_secondary %}
+              <br><span class="td-muted">+ {{ r.incident_type_secondary }}</span>
+            {% endif %}
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if r.model_confidence is not none %}
+            {% set pct = (r.model_confidence * 100)|int %}
+            {% if r.model_confidence >= 0.6 %}
+              <span class="badge badge--accepted">{{ "%.2f"|format(r.model_confidence) }}</span>
+            {% elif r.model_confidence >= 0.3 %}
+              <span class="badge badge--needs-review">{{ "%.2f"|format(r.model_confidence) }}</span>
+            {% else %}
+              <span class="badge badge--rising">{{ "%.2f"|format(r.model_confidence) }}</span>
+            {% endif %}
+          {% else %}
+            <span class="td-muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <a class="btn btn--primary btn--sm"
+             href="{{ url_for('review.resolve', record_id=r.id) }}">Review</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: var(--space-10);">
+  <div style="font-size: 2.5rem; margin-bottom: var(--space-3);">✅</div>
+  <h4>All clear!</h4>
+  <p class="mt-2" style="margin-top: var(--space-2);">No records pending review.</p>
+  <a class="btn btn--ghost" href="{{ url_for('dashboard.index') }}" style="margin-top: var(--space-4); display: inline-flex;">
+    Back to Dashboard
+  </a>
+</div>
+{% endif %}
+
+{% endblock %}

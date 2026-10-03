@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BANTAY — Barangay Anunas Incident Tracking and Analysis System. Staff login.">
+  <title>Login — BANTAY</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.jpg') }}" type="image/jpeg">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<main class="login-page">
+  <div class="login-card">
+    <img class="login-card__seal" src="{{ url_for('static', filename='img/logo.jpg') }}" alt="Barangay Anunas seal">
+    <span class="login-card__logo">BANTAY</span>
+    <p class="login-card__sub">Barangay Anunas Incident Tracking &amp; Analysis System</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for m in messages %}
+          <div class="flash" style="margin-bottom: 1.25rem;">{{ m }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input class="form-control" id="username" name="username"
+               type="text" autocomplete="username" required
+               placeholder="Enter your username">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control" id="password" name="password"
+               type="password" autocomplete="current-password" required
+               placeholder="Enter your password">
+      </div>
+      <button class="btn btn--primary w-full" id="login-btn" type="submit"
+              style="justify-content: center; margin-top: 0.5rem; padding: 0.75rem 1rem;">
+        Sign In
+      </button>
+    </form>
+  </div>
+</main>
+<script>
+  document.getElementById('login-form').addEventListener('submit', function() {
+    var btn = document.getElementById('login-btn');
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+  });
+</script>
+</body>
+</html>

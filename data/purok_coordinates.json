@@ -1,0 +1,158 @@
+{
+  "_meta": {
+    "description": "Lat/lon per purok/place for the Hotspot Analysis map (bantay/routes/analytics.py) and for location-name matching on scan (bantay/routes/scan.py _puroks). Every coordinate here MUST fall inside data/anunas_boundary.geojson - tests/test_purok_coordinates.py enforces that. A place without a coordinate still appears in the bar-chart hotspot ranking, just not on the map, so leaving one out is always safer than guessing it.",
+    "default_center": [
+      15.156884,
+      120.55045
+    ],
+    "default_center_source": "Centroid of the Barangay Anunas administrative boundary, OpenStreetMap relation 21180548. Replaces the previous Angeles City city-level placeholder [15.159003, 120.555986]. PhilAtlas gives the barangay center as 15.1559, 120.5551 - within ~450 m, either is defensible.",
+    "boundary_file": "data/anunas_boundary.geojson",
+    "boundary_extent": {
+      "north": 15.166041,
+      "south": 15.148995,
+      "east": 120.567464,
+      "west": 120.523497,
+      "area_sq_km": 4.71,
+      "span_km": {
+        "ns": 1.9,
+        "ew": 4.72
+      }
+    },
+    "adjacent_barangays": [
+      "Amsic",
+      "Balibago",
+      "Cuayan",
+      "Malabañas",
+      "Margot",
+      "Pampang"
+    ],
+    "removed_outside_boundary": {
+      "_why": "These plotted OUTSIDE Barangay Anunas - incidents were landing on the map in the wrong barangay. Removed 2026-08-24 rather than replaced: no purok-boundary dataset for Anunas is published anywhere (OSM, PhilAtlas, angelescity.gov.ph), so a substitute would be a guess. Restore each one only from a real survey - a GPS reading at a known landmark in that purok, or the barangay's own purok map.",
+      "Purok 3": {
+        "was": [
+          15.27,
+          120.44
+        ],
+        "error": "~15 km NW, in the Sapangbato/Porac uplands"
+      },
+      "Purok 6": {
+        "was": [
+          15.155017,
+          120.57
+        ],
+        "error": "east of the boundary, inside Barangay Amsic"
+      },
+      "Purok 7": {
+        "was": [
+          15.16,
+          120.57
+        ],
+        "error": "east of the boundary, inside Barangay Amsic"
+      },
+      "Mountain View": {
+        "was": [
+          15.17,
+          120.59
+        ],
+        "error": "~4 km east, near Balibago/Malabañas"
+      },
+      "ClarkVille Compound": {
+        "was": [
+          15.1651209,
+          120.5623177
+        ],
+        "error": "70 m outside the northeast boundary. Sourced from OSM and initially accepted because an Overpass area query returned it for Anunas - Overpass's area matching is more permissive than the boundary polygon. Kept out rather than snapped in: 70 m of \"close enough\" is how the original bad coordinates got here."
+      },
+      "Savannah Green Plains": {
+        "was": [
+          15.1492876,
+          120.5524896
+        ],
+        "error": "366 m outside the southern boundary - in the neighbouring barangay. Same Overpass area-matching cause as ClarkVille Compound."
+      }
+    },
+    "low_precision": {
+      "_why": "Inside the boundary but rounded to 2 decimals (~1 km). Anunas is only 1.9 km north-south, so this is ~50% of the barangay's height - fine for a rough pin, too coarse for purok-level hotspot analysis. Re-survey.",
+      "entries": [
+        "Purok 1",
+        "Purok 4"
+      ]
+    },
+    "changed": {
+      "Villasol Subdivision": {
+        "was": [
+          15.1634,
+          120.5579
+        ],
+        "now_source": "OpenStreetMap node, ~200 m from the previous value"
+      }
+    },
+    "source": "OpenStreetMap relation 21180548 (ODbL) via Overpass `out geom`, retrieved 2026-08-24; PhilAtlas for the barangay-center cross-check. Every entry was point-in-polygon tested against the boundary, which rejected 6 of the 12 candidates - including 2 that Overpass itself had returned as being inside.",
+    "geocode_misses": [
+      "CLARK AVE VILLASOL SUBD BRGY ANUNAS",
+      "Purok 3",
+      "Purok 4B",
+      "PLARIDEL STREET",
+      "Purok 6",
+      "NEPOVILLE",
+      "Anunas Brgy. Hall",
+      "Brgy Anunas",
+      "Purok 4A",
+      "HEROVILLE",
+      "Pineda comp.",
+      "LABAS HARAP NG BAHAY",
+      "Tambayan",
+      "Pan OFFICE",
+      "Anunas Hall",
+      "Barangay Hall",
+      "Nepoville",
+      "Pan Office",
+      "Pineda Comp"
+    ],
+    "aliases_why": "`aliases` maps a spelling variant of a place to its canonical name, so analytics counts one place once (bantay/normalize.py canonical_location). Matching ignores case, punctuation, house numbers and St/Street-style abbreviations, and an alias also matches inside a longer address. A null target means the text names no place inside the barangay (exact match only) and the record counts as Unknown. Add a street-to-place alias only when barangay staff confirm it, then re-run tools/migrate_location.py."
+  },
+  "puroks": {
+    "Purok 1": [
+      15.16,
+      120.55
+    ],
+    "Purok 2": [
+      15.154935,
+      120.557844
+    ],
+    "Purok 4": [
+      15.16,
+      120.56
+    ],
+    "Purok 5": [
+      15.159,
+      120.556
+    ],
+    "Friendship": [
+      15.15937,
+      120.55667
+    ],
+    "Villasol Subdivision": [
+      15.161877,
+      120.5593085
+    ],
+    "Riverside Subdivision": [
+      15.1607218,
+      120.5550056
+    ]
+  },
+  "aliases": {
+    "Barangay Hall": "Barangay Hall",
+    "Anunas Hall": "Barangay Hall",
+    "Anunas Brgy. Hall": "Barangay Hall",
+    "Anunas Barangay Hall": "Barangay Hall",
+    "Barangay Office": "Barangay Hall",
+    "Office of the Barangay": "Barangay Hall",
+    "Villasol": "Villasol Subdivision",
+    "Riverside": "Riverside Subdivision",
+    "Nepoville": "Nepoville",
+    "Brgy. Anunas": null,
+    "Anunas": null,
+    "Labas harap ng bahay": null
+  }
+}

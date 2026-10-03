@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Review Record #{{ record.id }} — BANTAY{% endblock %}
+{% block topbar_title %}Review Record #{{ record.id }}{% endblock %}
+{% block page_content %}
+
+<div class="page-header">
+  <h1>Review Record <span style="color: var(--clr-accent);">#{{ record.id }}</span></h1>
+  <p>Verify or correct the ML-suggested incident classification.</p>
+</div>
+
+<div class="resolve-layout">
+  <!-- Left: Narrative Panel -->
+  <div class="narrative-panel">
+    <div class="narrative-panel__label">Incident Narrative</div>
+    <p class="narrative-text" id="narrative-display">{{ record.narrative|visible_narrative }}</p>
+
+    {% if record.action_taken %}
+    <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--clr-border);">
+      <div class="narrative-panel__label">Action Taken</div>
+      <p class="narrative-text text-sm" style="font-size: var(--font-size-sm);">{{ record.action_taken }}</p>
+    </div>
+    {% endif %}
+
+    <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--clr-border);">
+      <div class="narrative-panel__label">Record Details</div>
+      <table style="font-size: var(--font-size-xs); width: 100%; border-collapse: collapse;">
+        <tr><td class="td-muted" style="padding: 3px 0; width: 100px;">Date</td><td>{{ record.date or '—' }}</td></tr>
+        <tr><td class="td-muted" style="padding: 3px 0;">Time</td><td>{{ record.time or '—' }}</td></tr>
+        <tr><td class="td-muted" style="padding: 3px 0;">Purok</td><td>{{ record.location_purok or '—' }}</td></tr>
+        <tr><td class="td-muted" style="padding: 3px 0;">Batch</td><td>{{ record.batch_number or '—' }}</td></tr>
+        <tr><td class="td-muted" style="padding: 3px 0;">Encoded by</td><td>{{ record.encoded_by or '—' }}</td></tr>
+      </table>
+    </div>
+
+    {% if record.model_confidence is not none %}
+    <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--clr-border);">
+      <div class="narrative-panel__label">Model Confidence</div>
+      <div class="flex items-center gap-2" style="gap: var(--space-2);">
+        {% set pct = (record.model_confidence * 100)|int %}
+        {% if record.model_confidence >= 0.6 %}
+          <span class="conf-bar conf-bar--high" style="width: 120px;"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+          <span class="badge badge--accepted">{{ "%.0f"|format(record.model_confidence * 100) }}%</span>
+        {% elif record.model_confidence >= 0.3 %}
+          <span class="conf-bar conf-bar--mid" style="width: 120px;"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+          <span class="badge badge--needs-review">{{ "%.0f"|format(record.model_confidence * 100) }}%</span>
+        {% else %}
+          <span class="conf-bar conf-bar--low" style="width: 120px;"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+          <span class="badge badge--rising">{{ "%.0f"|format(record.model_confidence * 100) }}%</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: Classification Form -->
+  <div>
+    <div class="card">
+      <h5 style="margin-bottom: var(--space-5);">Classification</h5>
+      <form method="post" id="resolve-form">
+        <div class="form-group">
+          <label class="form-label" for="incident_type_primary">Primary Incident Type</label>
+          <select class="form-control" id="incident_type_primary" name="incident_type_primary" required>
+            <option value="">— Select primary type —</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {% if c == record.incident_type_primary %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-hint">This is the ML target label.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="incident_type_secondary">Secondary Type <span>optional</span></label>
+          <select class="form-control" id="incident_type_secondary" name="incident_type_secondary">
+            <option value="">None</option>
+            {% for c in categories %}
+            <option value="{{ c }}" {% if c == record.incident_type_secondary %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-hint">Optional overlapping concern.</div>
+        </div>
+
+        <!-- Rerun Classifier: re-scores the narrative shown on the left
+             (as displayed to this role - already name-masked for non-admins,
+             see bantay/narrative.py) against the live model. Useful when the
+             narrative was corrected after this record was first classified,
+             so the stored suggestion above is stale. -->
+        <div style="margin: 0 0 var(--space-5);">
+          <button class="btn btn--ghost btn--sm" type="button" id="rerun-predict-btn">Rerun Classifier</button>
+          <span id="rerun-predict-status" style="color: var(--clr-muted); font-size: 0.8rem; margin-left: var(--space-2);"></span>
+
+          <div class="prediction-preview" id="rerun-prediction-preview">
+            <div class="stat-label">Incident Type <span id="rerun-pred-source" style="font-weight: 400;"></span></div>
+            <div class="prediction-label" id="rerun-pred-label">—</div>
+            <div class="prediction-conf" id="rerun-pred-conf"></div>
+            <p id="rerun-pred-reason" style="color: var(--clr-muted); font-size: 0.8rem; margin-top: var(--space-1);"></p>
+            <button type="button" class="btn btn--ghost btn--sm" style="margin-top: var(--space-2);" id="use-rerun-btn">Use This Suggestion</button>
+          </div>
+        </div>
+
+        <input type="hidden" id="model_confidence" name="model_confidence"
+               value="{{ record.model_confidence if record.model_confidence is not none else '' }}">
+
+        <!-- Quick-accept button -->
+        {% if record.incident_type_primary %}
+        <div style="background: hsl(212,90%,58%,0.06); border: 1px solid hsl(212,90%,58%,0.18); border-radius: var(--radius); padding: var(--space-3) var(--space-4); margin-bottom: var(--space-5); font-size: var(--font-size-sm);">
+          <span class="text-muted">ML suggests:</span>
+          <strong style="color: var(--clr-accent);">{{ record.incident_type_primary }}</strong>
+          {% if record.incident_type_secondary %}
+            <span class="text-muted"> + {{ record.incident_type_secondary }}</span>
+          {% endif %}
+          <br>
+          <button type="button" class="btn btn--ghost btn--sm" style="margin-top: var(--space-2);"
+                  onclick="acceptSuggestion()">Accept ML Suggestion</button>
+        </div>
+        {% endif %}
+
+        <div class="flex gap-2">
+          <button class="btn btn--success" id="save-btn" type="submit">
+            Save Review
+          </button>
+          <a class="btn btn--ghost" href="{{ url_for('review.queue') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function acceptSuggestion() {
+    var primary = {{ record.incident_type_primary | tojson }};
+    var secondary = {{ record.incident_type_secondary | tojson }};
+    var primSel = document.getElementById('incident_type_primary');
+    var secSel  = document.getElementById('incident_type_secondary');
+    for (var i = 0; i < primSel.options.length; i++) {
+      if (primSel.options[i].value === primary) { primSel.selectedIndex = i; break; }
+    }
+    if (secondary) {
+      for (var j = 0; j < secSel.options.length; j++) {
+        if (secSel.options[j].value === secondary) { secSel.selectedIndex = j; break; }
+      }
+    }
+  }
+  document.getElementById('resolve-form').addEventListener('submit', function() {
+    document.getElementById('save-btn').textContent = 'Saving…';
+    document.getElementById('save-btn').disabled = true;
+  });
+
+  var rerunBtn     = document.getElementById('rerun-predict-btn');
+  var rerunStatus  = document.getElementById('rerun-predict-status');
+  var rerunPreview = document.getElementById('rerun-prediction-preview');
+  var rerunLabelEl = document.getElementById('rerun-pred-label');
+  var rerunConfEl  = document.getElementById('rerun-pred-conf');
+  var rerunReasonEl= document.getElementById('rerun-pred-reason');
+  var rerunSourceEl= document.getElementById('rerun-pred-source');
+  var useRerunBtn  = document.getElementById('use-rerun-btn');
+  var lastRerun    = null;
+
+  var recordDate  = {{ record.date | tojson }};
+  var recordTime  = {{ record.time | tojson }};
+  var recordPurok = {{ record.location_purok | tojson }};
+
+  if (rerunBtn) {
+    rerunBtn.addEventListener('click', function() {
+      var narrativeText = document.getElementById('narrative-display').textContent.trim();
+      if (narrativeText.length < 20) {
+        rerunStatus.textContent = 'Narrative is too short to classify.';
+        return;
+      }
+      rerunBtn.disabled = true;
+      rerunStatus.textContent = 'Classifying…';
+      fetch('{{ url_for("records.predict") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          narrative: narrativeText, date: recordDate, time: recordTime,
+          location_purok: recordPurok, model: '',
+        }),
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        rerunBtn.disabled = false;
+        if (!data.label) {
+          rerunStatus.textContent = 'Could not classify - is the classifier reachable?';
+          rerunPreview.classList.remove('visible');
+          return;
+        }
+        lastRerun = data;
+        document.getElementById('model_confidence').value = data.confidence;
+        rerunSourceEl.textContent = data.source === 'sealion' ? '(SEA-LION)' : '(fallback: legacy TF-IDF, reference only)';
+        rerunLabelEl.textContent = data.label;
+        rerunConfEl.textContent  = 'Confidence Score: ' + (data.confidence * 100).toFixed(1) + '% — ' + data.review;
+        rerunReasonEl.textContent = data.reason ? ('Reason: ' + data.reason) : '';
+        rerunPreview.classList.add('visible');
+        rerunStatus.textContent = 'Updated just now.';
+      })
+      .catch(function() {
+        rerunBtn.disabled = false;
+        rerunStatus.textContent = 'Could not classify - is the classifier reachable?';
+        rerunPreview.classList.remove('visible');
+      });
+    });
+  }
+
+  if (useRerunBtn) {
+    useRerunBtn.addEventListener('click', function() {
+      if (!lastRerun || !lastRerun.label) return;
+      var primSel = document.getElementById('incident_type_primary');
+      for (var i = 0; i < primSel.options.length; i++) {
+        if (primSel.options[i].value === lastRerun.label) { primSel.selectedIndex = i; break; }
+      }
+    });
+  }
+</script>
+{% endblock %}

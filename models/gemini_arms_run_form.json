@@ -1,0 +1,35 @@
+{
+  "text": {
+    "pages": 151,
+    "wall_seconds": 1712.2,
+    "sec_per_page": 11.3,
+    "statuses": {
+      "rejected": 14,
+      "ok": 133,
+      "error": 4
+    },
+    "errors": 18,
+    "prompt": "built-in",
+    "fidelity": {
+      "repaired_rate": 0.2582,
+      "added_rate": 0.0271,
+      "lost_rate": 0.0294
+    }
+  },
+  "image": {
+    "pages": 151,
+    "wall_seconds": 1990.4,
+    "sec_per_page": 13.2,
+    "statuses": {
+      "ok": 150,
+      "error": 1
+    },
+    "errors": 1,
+    "prompt": "built-in",
+    "fidelity": {
+      "repaired_rate": 0.2908,
+      "added_rate": 0.0537,
+      "lost_rate": 0.0276
+    }
+  }
+}

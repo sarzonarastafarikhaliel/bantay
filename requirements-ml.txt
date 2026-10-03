@@ -1,0 +1,33 @@
+# ML extras for BANTAY v2 (OCR intake).
+# The Flask app runs WITHOUT these - it falls back to the TF-IDF classifier and
+# the stdlib lexicon corrector. Install them on the training/deployment machine
+# only.
+#
+# torch is NOT pinned here on purpose: it must come from the CUDA index first, or
+# pip silently installs the CPU wheel and training drops to about 30x slower.
+#
+#   pip uninstall -y torch
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+#   pip install -r requirements-ml.txt
+#
+# cu128 for a GTX 1660 SUPER (Turing sm_75) even though the driver reports
+# CUDA 13.2 - a newer driver runs an older runtime, never the reverse.
+
+transformers==4.44.2
+datasets==2.21.0
+accelerate==0.34.2
+easyocr==1.7.2                # default OCR backend, pip-only, reuses torch
+Pillow==10.4.0
+
+# Optional OCR backends - install only the one you use
+# paddleocr==3.7.0            # paddle backend; also needs paddlepaddle (CPU) or
+# paddlepaddle==3.3.1         # paddlepaddle-gpu. Independent of torch.
+# google-cloud-vision==3.7.4  # gvision backend; needs GOOGLE_APPLICATION_CREDENTIALS
+
+# Optional LLM verification pass over the corrected OCR text (bantay/ocr/gemini.py).
+# One SDK, two backends: Vertex AI on your own GCP project (bills the project, so
+# Cloud credits apply, and reuses the gvision service account), or an AI Studio
+# key in GEMINI_API_KEY (billed separately - credits do NOT cover it).
+# Configure neither and the pass is a no-op, so the app runs the same whether or
+# not this is installed. Force it off with BANTAY_GEMINI=0.
+# google-genai==2.19.0

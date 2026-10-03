@@ -1,0 +1,152 @@
+source_file,gold_type,gold_group,pred_type,pred_group,p_pred,reconstructed,error,latency_s,eval_count,eval_duration_s
+20260506_130625.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011275914,True,,11.4759,26.0,0.457624
+20260506_130750.jpg,Collection of Sum of Money,Civil Dispute,Neighbor Dispute,Community Disturbance,0.9506485930991132,True,,5.3498,52.0,0.887525
+20260506_130754.jpg,Robbery,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9999660011519084,True,,4.8099,35.0,0.630143
+20260506_130758.jpg,Vehicular Incident,Community Disturbance,Vehicular Incident,Community Disturbance,0.9996304045546556,True,,4.9307,32.0,0.581561
+20260506_130808.jpg,Oral Defamation,Criminal/Penal Code,Neighbor Dispute,Community Disturbance,0.9999660011559592,True,,4.6861,34.0,0.601925
+20260506_130828.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.99996600113975,True,,4.788,53.0,0.910286
+20260506_130841.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9999660010830098,True,,3.9422,27.0,0.491772
+20260506_155949.jpg,Collection of Sum of Money,Civil Dispute,Boundary Dispute,Civil Dispute,0.9999660011559216,True,,4.5121,47.0,0.811026
+20260507_225554.jpg,Ejectment,Civil Dispute,Neighbor Dispute,Community Disturbance,0.999959912003666,True,,4.4613,34.0,0.605525
+20260507_225618.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Neighbor Dispute,Community Disturbance,0.9992966330110414,True,,4.1825,35.0,0.614121
+20260507_225641.jpg,Collection of Sum of Money,Civil Dispute,Boundary Dispute,Civil Dispute,0.5724721453844249,True,,4.613,54.0,0.935573
+20260507_225653.jpg,Marital Relation,Family/Domestic,Alarms and Scandals,Criminal/Penal Code,0.9743704599624402,True,,4.5109,48.0,0.867623
+20260507_225717.jpg,Property Claim / Damage,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9568261635748204,True,,4.6707,37.0,0.65323
+20260507_225807.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9986266084761072,True,,4.7922,49.0,0.853748
+20260507_225854.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Family/Sibling Dispute,Family/Domestic,0.9998583492351628,True,,4.776,51.0,0.896509
+20260507_230015.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559508,True,,4.2546,34.0,0.597607
+20260507_230248.jpg,Collection of Sum of Money,Civil Dispute,Neighbor Dispute,Community Disturbance,0.5558867539976815,True,,3.9404,28.0,0.493135
+20260507_230349.jpg,Collection of Sum of Money,Civil Dispute,Neighbor Dispute,Community Disturbance,0.999743285177328,True,,4.1231,28.0,0.497026
+20260507_230515.jpg,Physical Injury,Criminal/Penal Code,Neighbor Dispute,Community Disturbance,0.9887540696540842,True,,4.8175,45.0,0.787939
+20260507_230532.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559546,True,,4.617,40.0,0.712558
+20260507_230548.jpg,Property Claim / Damage,Civil Dispute,Boundary Dispute,Civil Dispute,0.5337671776869106,True,,4.5128,39.0,0.683473
+20260507_230610.jpg,Collection of Sum of Money,Civil Dispute,Neighbor Dispute,Community Disturbance,0.9999482673587388,True,,3.9556,26.0,0.471415
+20260507_230716.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9711437103322808,True,,3.9375,31.0,0.539231
+20260507_230732.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.8299560861332638,True,,3.9829,28.0,0.491834
+20260507_230756.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.999963833692388,True,,4.2446,45.0,0.769075
+20260507_230815.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9963591221975142,True,,3.9705,28.0,0.491703
+20260507_230848.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9998478494165444,True,,4.315,45.0,0.762618
+20260507_231200.jpg,Theft,Criminal/Penal Code,Lost Property / Document,Property/Lost Items,0.9938225532957888,True,,4.0845,37.0,0.634326
+20260507_231225.jpg,Estafa (Swindling),Criminal/Penal Code,Boundary Dispute,Civil Dispute,0.551446429245318,True,,4.0502,34.0,0.599968
+20260507_231237.jpg,Collection of Sum of Money,Civil Dispute,Estafa (Swindling),Criminal/Penal Code,0.6321617436019427,True,,4.3998,57.0,0.977225
+20260507_231248.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9990521057752672,True,,4.5905,42.0,0.734185
+20260507_231301.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999660011559112,True,,4.4788,47.0,0.81994
+20260507_231312.jpg,Slight Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9974243175727298,True,,4.5097,36.0,0.634328
+20260507_231641.jpg,Property Claim / Damage,Civil Dispute,Estafa (Swindling),Criminal/Penal Code,0.9999660011519084,True,,4.1701,39.0,0.689605
+20260507_231810.jpg,Lost Property / Document,Property/Lost Items,Lost Property / Document,Property/Lost Items,0.9999660011559612,True,,3.8657,28.0,0.497736
+20260507_231832.jpg,Breach of Contract,Civil Dispute,Boundary Dispute,Civil Dispute,0.5510261189463393,True,,4.3849,36.0,0.629136
+20260507_231850.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9999660011478556,True,,4.543,40.0,0.720127
+20260507_231916.jpg,RA 9262 (VAWC),Family/Domestic,Family/Sibling Dispute,Family/Domestic,0.99414431263468,True,,5.1808,62.0,1.085737
+20260507_231951.jpg,Vehicular Incident,Community Disturbance,Vehicular Incident,Community Disturbance,0.6092591864446154,True,,5.0807,47.0,0.823425
+20260507_232003.jpg,Malicious Mischief / Property Damage,Criminal/Penal Code,Neighbor Dispute,Community Disturbance,0.999966001154728,True,,4.6216,32.0,0.57119
+20260507_232022.jpg,Neighbor Dispute,Community Disturbance,Neighbor Dispute,Community Disturbance,0.9789628569119656,True,,4.9583,42.0,0.738394
+20260507_232059.jpg,Online Defamation / Threat,Criminal/Penal Code,Online Defamation / Threat,Criminal/Penal Code,0.996446124201078,True,,4.5831,49.0,0.866221
+20260507_232145.jpg,Theft,Criminal/Penal Code,Lost Property / Document,Property/Lost Items,0.9632131163256497,True,,4.3078,38.0,0.664576
+20260507_232200.jpg,Slight Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559406,True,,3.9229,35.0,0.611167
+20260507_232212.jpg,Marital Relation,Family/Domestic,Neighbor Dispute,Community Disturbance,0.5129368182568177,True,,4.5465,40.0,0.694701
+20260507_232241.jpg,Lost Property / Document,Property/Lost Items,Lost Property / Document,Property/Lost Items,0.999966001155956,True,,4.0748,46.0,0.782183
+20260507_232306.jpg,Lost Property / Document,Property/Lost Items,Lost Property / Document,Property/Lost Items,0.9999660011559562,True,,3.7405,26.0,0.460596
+20260507_232338.jpg,Family/Sibling Dispute,Family/Domestic,Neighbor Dispute,Community Disturbance,0.99992899533047,True,,3.8099,28.0,0.490728
+20260507_232350.jpg,Slight Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011549528,True,,3.9705,35.0,0.605667
+20260507_232431.jpg,Property Claim / Damage,Civil Dispute,Physical Injury,Criminal/Penal Code,0.9999660011553978,True,,4.0807,30.0,0.533706
+20260507_232447.jpg,Slight Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559048,True,,4.6496,41.0,0.718073
+20260507_232505.jpg,Slight Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.999966001155717,True,,4.7747,36.0,0.63131
+20260507_232548.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9998691205679878,True,,4.5827,48.0,0.842824
+20260507_232602.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9904533890855776,True,,4.3099,39.0,0.687059
+20260507_232616.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999660010870628,True,,4.297,45.0,0.772423
+20260507_232639.jpg,Oral Defamation,Criminal/Penal Code,Oral Defamation,Criminal/Penal Code,0.9877417089037858,True,,4.456,44.0,0.785904
+20260507_232655.jpg,Collection of Sum of Money,Civil Dispute,Neighbor Dispute,Community Disturbance,0.9999660011515352,True,,3.9736,30.0,0.518924
+20260507_232718.jpg,Vehicular Incident,Community Disturbance,Vehicular Incident,Community Disturbance,0.9144357449053716,True,,4.3397,37.0,0.665397
+20260507_232741.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9999660011235384,True,,4.6012,34.0,0.611666
+20260507_232756.jpg,Others / Miscellaneous,Catch-all,Lost Property / Document,Property/Lost Items,0.7507717159245549,True,,3.9816,32.0,0.55851
+20260507_232824.jpg,Collection of Sum of Money,Civil Dispute,Boundary Dispute,Civil Dispute,0.5805169419339054,True,,4.0259,31.0,0.547818
+20260507_232835.jpg,Ejectment,Civil Dispute,Boundary Dispute,Civil Dispute,0.9996465329929352,True,,3.9394,30.0,0.527053
+20260507_232846.jpg,Vehicular Incident,Community Disturbance,Physical Injury,Criminal/Penal Code,0.9999660011559608,True,,4.7774,39.0,0.679008
+20260507_232912.jpg,Property Claim / Damage,Civil Dispute,Boundary Dispute,Civil Dispute,0.9999660011557816,True,,4.4256,39.0,0.680211
+20260507_232925.jpg,Collection of Sum of Money,Civil Dispute,Neighbor Dispute,Community Disturbance,0.9726467524454,True,,4.0889,31.0,0.545593
+20260507_232940.jpg,Slight Physical Injury,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999222717632722,True,,5.0098,51.0,0.879926
+20260507_232957.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9999660011558458,True,,4.3207,34.0,0.60425
+20260507_233024.jpg,Grave Threats / Light Threats,Criminal/Penal Code,,,,False,,5.4616,,
+20260507_233121.jpg,Vehicular Incident,Community Disturbance,Vehicular Incident,Community Disturbance,0.9989805937217128,True,,4.7428,54.0,0.94356
+20260507_233136.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559568,True,,4.1064,37.0,0.652424
+20260507_233236.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999660011519084,True,,4.1778,42.0,0.752325
+20260507_233252.jpg,Online Defamation / Threat,Criminal/Penal Code,Oral Defamation,Criminal/Penal Code,0.9702136156415192,True,,4.1794,42.0,0.759336
+20260507_233321.jpg,Property Claim / Damage,Civil Dispute,Neighbor Dispute,Community Disturbance,0.9720164267740876,True,,4.4338,46.0,0.794896
+20260507_233338.jpg,Marital Relation,Family/Domestic,Marital Relation,Family/Domestic,0.9989701294955846,True,,4.1027,37.0,0.654621
+20260507_233400.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9737392297471976,True,,4.3179,39.0,0.691812
+20260507_233417.jpg,Animal-Related Incident,Community Disturbance,Physical Injury,Criminal/Penal Code,0.9989387927210672,True,,4.2118,29.0,0.515586
+20260507_233432.jpg,Unjust Vexation,Criminal/Penal Code,Oral Defamation,Criminal/Penal Code,0.9998339412200604,True,,4.9865,47.0,0.83753
+20260507_233513.jpg,Estafa (Swindling),Criminal/Penal Code,Collection of Sum of Money,Civil Dispute,0.8194838511940303,True,,4.8395,45.0,0.787818
+20260507_233529.jpg,Family/Sibling Dispute,Family/Domestic,Neighbor Dispute,Community Disturbance,0.6124252850973222,True,,4.9269,43.0,0.749697
+20260507_233550.jpg,Malicious Mischief / Property Damage,Criminal/Penal Code,Family/Sibling Dispute,Family/Domestic,0.9975375482960332,True,,4.1641,32.0,0.572461
+20260507_233629.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999660011438029,True,,5.0262,61.0,1.059519
+20260507_233655.jpg,Alarms and Scandals,Criminal/Penal Code,Neighbor Dispute,Community Disturbance,0.9998997513262132,True,,4.4731,42.0,0.731911
+20260507_233831.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Marital Relation,Family/Domestic,0.9880021592149208,True,,4.214,41.0,0.724728
+20260507_233841.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.99996600115596,True,,4.3306,38.0,0.659836
+20260507_233853.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9999660011438029,True,,4.1571,41.0,0.723719
+20260507_233910.jpg,Lost Property / Document,Property/Lost Items,Lost Property / Document,Property/Lost Items,0.9999660011559612,True,,4.1668,40.0,0.687071
+20260507_233921.jpg,Oral Defamation,Criminal/Penal Code,Estafa (Swindling),Criminal/Penal Code,0.9999660011559596,True,,4.6879,43.0,0.756069
+20260507_233930.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999660011559202,True,,4.5048,35.0,0.609782
+20260507_233954.jpg,Referral to Police/Other Agency,Administrative/Referral,Neighbor Dispute,Community Disturbance,0.9955753601728656,True,,4.6341,42.0,0.732681
+20260507_234100.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9999660011438029,True,,3.9954,29.0,0.514022
+20260507_234122.jpg,RA 9262 (VAWC),Family/Domestic,Physical Injury,Criminal/Penal Code,0.99996600115596,True,,3.9485,29.0,0.505489
+20260507_234132.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9771636280075584,True,,4.4654,46.0,0.802814
+20260507_234156.jpg,Malicious Mischief / Property Damage,Criminal/Penal Code,Malicious Mischief / Property Damage,Criminal/Penal Code,0.9999660011288672,True,,4.1255,37.0,0.655322
+20260507_234205.jpg,Others / Miscellaneous,Catch-all,Neighbor Dispute,Community Disturbance,0.99996203088567,True,,3.9345,31.0,0.537817
+20260507_234239.jpg,Boundary Dispute,Civil Dispute,Boundary Dispute,Civil Dispute,0.9692213992324106,True,,4.4231,31.0,0.548792
+20260507_234256.jpg,Property Claim / Damage,Civil Dispute,Neighbor Dispute,Community Disturbance,0.953983191533621,True,,4.0313,36.0,0.614038
+20260507_234310.jpg,RA 9262 (VAWC),Family/Domestic,RA 9262 (VAWC),Family/Domestic,0.9999660011478556,True,,4.3407,40.0,0.697256
+20260507_234344.jpg,Animal-Related Incident,Community Disturbance,Animal-Related Incident,Community Disturbance,0.9999378904348748,True,,4.204,31.0,0.539961
+20260507_234354.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559456,True,,4.3452,43.0,0.743511
+20260507_234406.jpg,Peeping/Voyeurism,Criminal/Penal Code,Peeping/Voyeurism,Criminal/Penal Code,0.9999660011559302,True,,4.1318,39.0,0.683871
+20260507_234417.jpg,Peeping/Voyeurism,Criminal/Penal Code,Peeping/Voyeurism,Criminal/Penal Code,0.9999660011555304,True,,4.3527,38.0,0.670211
+20260507_234428.jpg,Property Claim / Damage,Civil Dispute,Neighbor Dispute,Community Disturbance,0.999951341466874,True,,3.9775,32.0,0.548804
+20260507_234452.jpg,Malicious Mischief / Property Damage,Criminal/Penal Code,Malicious Mischief / Property Damage,Criminal/Penal Code,0.9993766569646438,True,,3.8735,33.0,0.590762
+20260507_234514.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9988626267572148,True,,4.1424,32.0,0.555685
+20260507_234525.jpg,Marital Relation,Family/Domestic,Marital Relation,Family/Domestic,0.9881992977644082,True,,4.6318,41.0,0.721401
+20260507_234601.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999587298012992,True,,4.4814,34.0,0.59458
+20260507_234623.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559568,True,,4.1697,30.0,0.529437
+20260507_234637.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.9999606037482974,True,,3.9617,28.0,0.487225
+20260507_234714.jpg,Online Defamation / Threat,Criminal/Penal Code,Online Defamation / Threat,Criminal/Penal Code,0.9995978646144072,True,,4.3472,46.0,0.806328
+20260507_234736.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559612,True,,4.0911,27.0,0.482326
+20260507_234827.jpg,Vehicular Incident,Community Disturbance,Physical Injury,Criminal/Penal Code,0.9999660011553456,True,,4.5201,32.0,0.568984
+20260507_234839.jpg,Slight Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559508,True,,4.0703,27.0,0.481874
+20260507_234850.jpg,RA 9262 (VAWC),Family/Domestic,RA 9262 (VAWC),Family/Domestic,0.7917666592049254,True,,4.5807,44.0,0.770137
+20260507_234901.jpg,Slight Physical Injury,Criminal/Penal Code,Family/Sibling Dispute,Family/Domestic,0.9999660011558544,True,,4.7964,52.0,0.906443
+20260507_234927.jpg,Physical Injury,Criminal/Penal Code,Family/Sibling Dispute,Family/Domestic,0.9999660011509518,True,,4.6423,43.0,0.747409
+20260507_234939.jpg,Collection of Sum of Money,Civil Dispute,Collection of Sum of Money,Civil Dispute,0.99981359472424,True,,4.0351,32.0,0.559095
+20260507_235005.jpg,Estafa (Swindling),Criminal/Penal Code,Estafa (Swindling),Criminal/Penal Code,0.999966001155929,True,,4.7676,51.0,0.893806
+20260507_235015.jpg,Property Claim / Damage,Civil Dispute,Boundary Dispute,Civil Dispute,0.999966001155961,True,,4.0459,33.0,0.573558
+20260507_235027.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.98967235510711,True,,4.1935,31.0,0.549634
+20260507_235054.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Family/Sibling Dispute,Family/Domestic,0.9999660011438024,True,,4.4075,42.0,0.739605
+20260507_235109.jpg,RA 9262 (VAWC),Family/Domestic,RA 9262 (VAWC),Family/Domestic,0.9999660011519084,True,,4.8654,51.0,0.891222
+20260507_235129.jpg,Theft,Criminal/Penal Code,Robbery,Criminal/Penal Code,0.9999660011559592,True,,4.1424,27.0,0.496618
+20260507_235141.jpg,Trespassing,Criminal/Penal Code,Trespassing,Criminal/Penal Code,0.998464261462682,True,,4.5512,45.0,0.780131
+20260507_235216.jpg,Malicious Mischief / Property Damage,Criminal/Penal Code,Malicious Mischief / Property Damage,Criminal/Penal Code,0.9999521819786874,True,,4.3402,40.0,0.702381
+20260507_235235.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559552,True,,4.001,28.0,0.494371
+20260507_235257.jpg,Physical Injury,Criminal/Penal Code,Family/Sibling Dispute,Family/Domestic,0.9998997096319776,True,,4.1497,36.0,0.625606
+20260507_235306.jpg,Neighbor Dispute,Community Disturbance,Family/Sibling Dispute,Family/Domestic,0.847360553301082,True,,4.6003,41.0,0.721352
+20260507_235318.jpg,Malicious Mischief / Property Damage,Criminal/Penal Code,Neighbor Dispute,Community Disturbance,0.9999660011383888,True,,4.1973,31.0,0.544793
+20260507_235329.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9989191667547266,True,,4.4141,29.0,0.526467999
+20260507_235414.jpg,Trespassing,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9998148168537956,True,,4.9174,57.0,0.973851
+20260507_235427.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999660011519084,True,,4.2249,32.0,0.562562
+20260507_235446.jpg,Property Claim / Damage,Civil Dispute,Ejectment,Civil Dispute,0.9999655734635444,True,,4.15,33.0,0.589609
+20260507_235456.jpg,Vehicular Incident,Community Disturbance,Vehicular Incident,Community Disturbance,0.9921846496742062,True,,4.4948,31.0,0.55487
+20260507_235524.jpg,RA 9262 (VAWC),Family/Domestic,Physical Injury,Criminal/Penal Code,0.9997678171548884,True,,4.3749,30.0,0.530881999
+20260507_235536.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011559184,True,,4.3826,28.0,0.496449
+20260507_235547.jpg,Collection of Sum of Money,Civil Dispute,Boundary Dispute,Civil Dispute,0.9665646355930156,True,,4.5545,37.0,0.641942
+20260507_235600.jpg,RA 9262 (VAWC),Family/Domestic,Physical Injury,Criminal/Penal Code,0.9999660011559376,True,,4.09,30.0,0.521789
+20260507_235612.jpg,Theft,Criminal/Penal Code,Theft,Criminal/Penal Code,0.9976343996829944,True,,4.1917,25.0,0.471271
+20260507_235651.jpg,Family/Sibling Dispute,Family/Domestic,Physical Injury,Criminal/Penal Code,0.9999660011557238,True,,4.2347,41.0,0.693876
+20260507_235702.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Grave Threats / Light Threats,Criminal/Penal Code,0.9999658201222622,True,,4.7482,38.0,0.660338
+20260507_235712.jpg,Theft,Criminal/Penal Code,Robbery,Criminal/Penal Code,0.5166029636812803,True,,4.6529,31.0,0.560632
+20260507_235722.jpg,Others / Miscellaneous,Catch-all,Vehicular Incident,Community Disturbance,0.994084127576958,True,,4.4529,37.0,0.659069
+20260507_235732.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999660011558588,True,,11.8711,41.0,0.711145
+20260507_235754.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999333630893572,True,,4.0057,26.0,0.45675
+20260507_235807.jpg,Physical Injury,Criminal/Penal Code,Public Disturbance,Community Disturbance,0.9999660011275912,True,,5.063,56.0,0.979758
+20260507_235818.jpg,Physical Injury,Criminal/Penal Code,Physical Injury,Criminal/Penal Code,0.9999644108763864,True,,4.6922,36.0,0.641918
+20260507_235919.jpg,Grave Threats / Light Threats,Criminal/Penal Code,Neighbor Dispute,Community Disturbance,0.999964685220096,True,,4.1606,30.0,0.522058999
+20260507_235933.jpg,Family/Sibling Dispute,Family/Domestic,Oral Defamation,Criminal/Penal Code,0.9823353431607008,True,,4.3946,47.0,0.813365
+20260507_235942.jpg,Malicious Mischief / Property Damage,Criminal/Penal Code,Robbery,Criminal/Penal Code,0.993404259932079,True,,5.1917,50.0,0.876953
+20260508_000014.jpg,Family/Sibling Dispute,Family/Domestic,Neighbor Dispute,Community Disturbance,0.9999621567970078,True,,4.2492,33.0,0.580244
+20260508_000029.jpg,Breach of Contract,Civil Dispute,Neighbor Dispute,Community Disturbance,0.9999659783944154,True,,4.5852,43.0,0.752535

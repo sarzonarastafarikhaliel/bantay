@@ -1,0 +1,256 @@
+{
+  "_meta": {
+    "purpose": "Authoritative reference for BANTAY's PNP_CLASSIFICATION lookup table (bantay/normalize.py). Cross-checks tier + citation for each canonical incident category (IncidentType-CategoryGroup.csv taxonomy).",
+    "verified_on": "2026-08-15",
+    "verify_with": "python -m bantay.ml.verify_pnp_classification"
+  },
+  "tiers": {
+    "Index Crime": {
+      "definition": "Crimes against persons (murder, homicide, physical injury, rape) and crimes against property (robbery, theft, carnapping/carjacking, cattle rustling), as tracked in PNP crime statistics via CIRAS.",
+      "sources": [
+        "https://www.pna.gov.ph/articles/1015344",
+        "https://www.manilatimes.net/2022/10/14/news/national/non-index-crimes-down-by-3-pnp/1862165"
+      ]
+    },
+    "Non-Index Crime": {
+      "definition": "Other Revised Penal Code offenses, violations of special laws, and violations of local ordinances. Not treated by PNP as accurate indicators of overall crime rate; reflects enforcement activity instead.",
+      "sources": [
+        "https://www.pna.gov.ph/articles/1015344"
+      ]
+    },
+    "Non-Criminal Complaint": {
+      "definition": "Not a crime. A dispute within Katarungang Pambarangay's mandatory-conciliation jurisdiction, resolved at barangay level before it could reach a court.",
+      "sources": [
+        "https://jur.ph/law/facts/katarungang-pambarangay-law",
+        "https://www.respicio.ph/commentaries/barangay-conciliation-exemptions-under-katarungang-pambarangay-law"
+      ]
+    }
+  },
+  "categories": {
+    "Theft": {
+      "tier": "Index Crime",
+      "citation": "RPC Art. 308-311 (Theft)",
+      "notes": "Split from the previous combined 'Theft/Robbery' category to align with IncidentType-CategoryGroup.csv, which lists Theft and Robbery separately.",
+      "sources": ["https://library.legalresource.ph/title-10-crimes-against-property-book-2-revised-penal-code/"]
+    },
+    "Robbery": {
+      "tier": "Index Crime",
+      "citation": "RPC Art. 293-299 (Robbery)",
+      "notes": "Split from the previous combined 'Theft/Robbery' category. Robbery requires violence/intimidation/force; theft does not.",
+      "sources": ["https://library.legalresource.ph/title-10-crimes-against-property-book-2-revised-penal-code/"]
+    },
+    "Physical Injury": {
+      "tier": "Index Crime",
+      "citation": "RPC Art. 262 (Mutilation), 263 (Serious), 265 (Less Serious) Physical Injuries",
+      "notes": "Split from the previous combined 'Physical Injury/Altercation' category; Slight Physical Injuries now tracked separately (see below).",
+      "sources": ["https://criminallawphilippines.wordpress.com/2010/03/16/c2-physical-injuries-art-262-265/"]
+    },
+    "Slight Physical Injury": {
+      "tier": "Index Crime",
+      "citation": "RPC Art. 266 (Slight Physical Injuries)",
+      "notes": "IncidentType-CategoryGroup.csv lists Slight Physical Injury as its own category distinct from Physical Injury.",
+      "sources": ["https://criminallawphilippines.wordpress.com/2010/03/16/c2-physical-injuries-art-262-265/"]
+    },
+    "RA 9262 (VAWC)": {
+      "tier": "Non-Index Crime",
+      "citation": "RA 9262 (Anti-Violence Against Women and Their Children Act)",
+      "notes": "Special-law offense; not one of the 8 PNP index crimes.",
+      "sources": ["https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/2/22128"]
+    },
+    "Online Defamation / Threat": {
+      "tier": "Non-Index Crime",
+      "citation": "RA 10175 (Cybercrime Prevention Act) in relation to RPC Art. 355 (Libel) / Art. 282 (Grave Threats)",
+      "notes": "RA 10175 Sec. 6 raises the penalty one degree when RPC offenses (libel, threats) are committed via ICT.",
+      "sources": []
+    },
+    "Grave Threats / Light Threats": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 282 (Grave Threats); Art. 285 (Light Threats)",
+      "notes": "Confirmed — standard RPC threat provisions.",
+      "sources": []
+    },
+    "Unjust Vexation": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 287 (Unjust Vexation)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Alarms and Scandals": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 155 (Alarms and Scandals)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Malicious Mischief / Property Damage": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 327-331 (Malicious Mischief)",
+      "notes": "Confirmed — willful damage to another's property without theft.",
+      "sources": []
+    },
+    "Trespassing": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 280 (Qualified Trespass to Dwelling); Art. 281 (Other Forms of Trespass)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Estafa (Swindling)": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 315 (Estafa)",
+      "notes": "Not one of the 8 PNP index crimes despite being a common complaint type.",
+      "sources": []
+    },
+    "Coercion": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 286 (Grave Coercion); Art. 287 (Light Coercion)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Using Fictitious Names / False Certificates": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 178 (Using Fictitious Name); Art. 171-172 (Falsification)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Vehicular Incident": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 365 (Reckless Imprudence); RA 4136 (Land Transportation and Traffic Code)",
+      "notes": "Renamed from 'Motor Vehicle Collision (MVC)' to match IncidentType-CategoryGroup.csv's 'Vehicular Incident' label; citation unchanged.",
+      "sources": [
+        "https://www.respicio.ph/commentaries/reckless-imprudence-causing-injury-and-property-damage-under-revised-penal-code-article-365-in-the-philippines",
+        "https://www.officialgazette.gov.ph/1964/06/20/republic-act-no-4136/"
+      ]
+    },
+    "Public Disturbance": {
+      "tier": "Non-Index Crime",
+      "citation": "RPC Art. 153 (Tumults and Other Disturbances of Public Order)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Drug-Related Concern": {
+      "tier": "Non-Index Crime",
+      "citation": "RA 9165 (Comprehensive Dangerous Drugs Act of 2002)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Noise Complaint": {
+      "tier": "Non-Index Crime",
+      "citation": "Local noise ordinance, enacted under RA 7160 Sec. 16 (General Welfare Clause)",
+      "notes": "CORRECTION: there is no national Philippine 'anti-noise act'; barangay/city noise ordinances (curfew hours for videoke, decibel limits, etc.) exist only because RA 7160 grants LGUs general police power. Citation should point to RA 7160's enabling clause, not an undefined generic 'ordinance'.",
+      "sources": ["https://www.officialgazette.gov.ph/downloads/1991/10oct/19911010-RA-7160-CCA.pdf"]
+    },
+    "Curfew Violation": {
+      "tier": "Non-Index Crime",
+      "citation": "Local curfew ordinance (adults only) — RA 10630 exempts minors from punishment as a status offense",
+      "notes": "CORRECTION — significant: RA 10630 explicitly says status offenses (curfew, truancy, parental disobedience) 'shall not be considered as offenses and shall not be punished if committed by a child.' Only adult curfew violators are actually punishable, under the local ordinance itself.",
+      "sources": ["https://www.jjwc.gov.ph/wp-content/uploads/2020/01/Revised-Implementing-Rules-and-Regulations-of-RA-9344-as-amended-by-RA-10630.pdf"]
+    },
+    "Peeping/Voyeurism": {
+      "tier": "Non-Index Crime",
+      "citation": "RA 9995 (Anti-Photo and Video Voyeurism Act) if photo/video capture occurred; else RPC Art. 287 (Unjust Vexation)",
+      "notes": "RA 9995 specifically criminalizes taking/copying/selling/broadcasting photos or video of a person's private area or sexual act without consent. Plain 'peeping' (paninilip) with no device/recording is not covered by RA 9995 and typically falls under Unjust Vexation or a local ordinance instead.",
+      "sources": ["https://www.respicio.ph/bar/2025/criminal-law/special-penal-laws/anti-photo-and-video-voyeurism-act-of-2009-ra-no-9995"]
+    },
+    "Oral Defamation": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); may escalate to RPC Art. 358 (Oral Defamation) if unresolved",
+      "notes": "Most barangay-level oral defamation entries ('mura', verbal altercations) are handled as Katarungang Pambarangay disputes rather than filed as RPC Art. 358 cases outright.",
+      "sources": ["https://www.respicio.ph/commentaries/grave-oral-defamation-under-philippine-law"]
+    },
+    "Lost Property / Document": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 (barangay blotter recording); Civil Code Art. 719-720 (finder of lost movable property)",
+      "notes": "A blotter report of a lost item, not a dispute between two parties; recorded administratively rather than conciliated.",
+      "sources": []
+    },
+    "Ejectment": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1673 (grounds for judicial ejectment)",
+      "notes": "Confirmed.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Marital Relation": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Family Code Art. 149 et seq. (The Family)",
+      "notes": "Renamed from 'Domestic Dispute'; RA 9262 (VAWC) now tracked as its own category for cases involving violence against women/children.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Property Claim / Damage": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 2176 (quasi-delict)",
+      "notes": "Civil property-damage claim (not the willful/malicious Art. 327-331 offense).",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Neighbor Dispute": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay)",
+      "notes": "Confirmed.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Boundary Dispute": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 434 (accion reivindicatoria)",
+      "notes": "Confirmed.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Animal-Related Incident": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 2183 (possessor of animal's liability)",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Breach of Contract": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1170 et seq. (Breach of Obligations)",
+      "notes": "Confirmed.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Demand for Specific Performance": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1191 / 1233 et seq. (Specific Performance)",
+      "notes": "Confirmed.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Family/Sibling Dispute": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Family Code provisions on family relations",
+      "notes": "Confirmed.",
+      "sources": []
+    },
+    "Child Custody-Adjacent Concern": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay, referral); Family Code Art. 213 (custody of children)",
+      "notes": "Actual custody adjudication belongs to Family Court; barangay role is limited to referral/conciliation of the adjacent concern.",
+      "sources": []
+    },
+    "Missing Person Report": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 (barangay blotter recording/referral) — not itself an offense",
+      "notes": "Procedural blotter entry, not an offense or a Katarungang Pambarangay dispute.",
+      "sources": []
+    },
+    "Referral to Police/Other Agency": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 408-409 (Katarungang Pambarangay jurisdictional exceptions requiring referral)",
+      "notes": "Sec. 408-409 list matters exempt from mandatory barangay conciliation (e.g. offenses with no private offended party, cases needing urgent legal action), routed straight to police/court instead.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Collection of Sum of Money": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1156 et seq. (Obligations)",
+      "notes": "Confirmed — a debt/collection dispute is a civil obligation, mandatorily routed through barangay conciliation before it can be filed in court.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Amicable Settlement": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 411-422 (Katarungang Pambarangay Settlement)",
+      "notes": "Confirmed — this is the recorded outcome of Lupon conciliation itself (a signed 'kasunduan'), not a distinct offense.",
+      "sources": ["https://jur.ph/law/facts/katarungang-pambarangay-law"]
+    },
+    "Work/Service Dispute": {
+      "tier": "Non-Criminal Complaint",
+      "citation": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1713 et seq. (Contract for a Piece of Work)",
+      "notes": "CORRECTION: original mapping cited 'Labor Code', which governs employer-employee relations. The actual dataset rows for this category (e.g. a paint job / 'job order' dispute between two private individuals) are contract-for-service disputes between non-employees, governed by the Civil Code's law on obligations/contracts, not the Labor Code.",
+      "sources": []
+    }
+  }
+}

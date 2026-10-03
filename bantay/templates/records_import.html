@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Import Blotter Records — BANTAY{% endblock %}
+{% block topbar_title %}Import Blotter Records{% endblock %}
+{% block page_content %}
+
+<div class="page-header">
+  <h1>Import Blotter Records</h1>
+  <p>Upload a CSV or PDF made from the templates below. Every entry is saved the same way as a
+     New Blotter Record: same fields, same BLOTTER FORM narrative, and SEA-LION suggests the
+     incident type when you leave it blank.</p>
+</div>
+
+<div style="max-width: 760px;">
+  <form method="post" enctype="multipart/form-data" id="import-form">
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+      <div class="upload-zone__icon">📂</div>
+      <div class="upload-zone__text" id="upload-text">Click or drag a CSV or PDF file here</div>
+      <div class="upload-zone__sub" id="upload-sub">Supports .csv and .pdf — max 5 MB</div>
+      <input type="file" id="file-input" name="file" accept=".csv,.pdf" required
+             onchange="handleFile(this)">
+    </div>
+
+    <div class="card mt-4" style="margin-top: var(--space-4);">
+      <h5 style="margin-bottom: var(--space-3);">Traceability</h5>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="batch_number">Batch Number <span>optional — used for entries that leave it blank</span></label>
+          <input class="form-control" id="batch_number" name="batch_number" placeholder="e.g. BATCH-2026-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="encoded_by">Encoded By <span>optional — used for entries that leave it blank</span></label>
+          <input class="form-control" id="encoded_by" name="encoded_by" placeholder="Encoder name or ID">
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-2 mt-4" style="margin-top: var(--space-4);">
+      <button class="btn btn--primary" id="import-btn" type="submit" disabled>Import</button>
+      <a class="btn btn--ghost" href="{{ url_for('records.list_records') }}">Cancel</a>
+    </div>
+  </form>
+
+  <div class="card mt-4" style="margin-top: var(--space-5);">
+    <h5 style="margin-bottom: var(--space-2);">Templates</h5>
+    <div class="flex gap-2 flex-wrap" style="margin-bottom: var(--space-3);">
+      <a class="btn btn--ghost btn--sm" href="{{ url_for('records.import_template_csv') }}">Download CSV template</a>
+      <a class="btn btn--ghost btn--sm" href="{{ url_for('static', filename='templates/blotter_import_template.pdf') }}" download>Download PDF template</a>
+    </div>
+    <p class="text-sm" style="color: var(--clr-muted);">
+      <strong>CSV:</strong> one blotter record per row, columns below. Save from Excel as <em>CSV UTF-8</em>.<br>
+      <strong>PDF:</strong> one BLOTTER FORM block per record (the older BARANGAY BLOTTER ENTRY layout is still read), typed in the exact layout of the PDF
+      template (labels in capitals, value after the colon). Type it in Word or Google Docs and export as PDF.
+      A scanned or photographed page has no text to read — use <em>Scan a Blotter Page</em> on
+      New Blotter Record for those.
+    </p>
+  </div>
+
+  <div class="card mt-4" style="margin-top: var(--space-4);">
+    <h5 style="margin-bottom: var(--space-3);">CSV Columns</h5>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Column</th><th>New Blotter Record field</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>batch_number</td><td>Batch Number</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>encoded_by</td><td>Encoded By</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>source_file_page</td><td>—</td><td class="td-muted text-xs">optional — logbook page or image name</td></tr>
+          <tr><td>blotter_no</td><td>No.</td><td class="td-muted text-xs">blotter / entry number</td></tr>
+          <tr><td>date_reported</td><td>Petsa ng Pagblotter</td><td class="td-muted text-xs">YYYY-MM-DD</td></tr>
+          <tr><td>reporting_party</td><td>A. Nagrereklamo</td><td class="td-muted text-xs">as reported</td></tr>
+          <tr><td>complainant_address</td><td>A. Tirahan</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>complainant_contact</td><td>A. Contact No.</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>complainant_age</td><td>A. Edad</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>respondent</td><td>B. Inirereklamo</td><td class="td-muted text-xs">as reported</td></tr>
+          <tr><td>respondent_address</td><td>B. Tirahan</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>respondent_contact</td><td>B. Contact No.</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>respondent_age</td><td>B. Edad</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>complaint</td><td>C. Reklamo</td><td class="td-muted text-xs">short complaint, as written</td></tr>
+          <tr><td>date</td><td>D. Petsa</td><td class="td-muted text-xs">YYYY-MM-DD (other date formats are converted)</td></tr>
+          <tr><td>time</td><td>D. Oras</td><td class="td-muted text-xs">HH:MM, 24-hour (9:30 PM is converted)</td></tr>
+          <tr><td>location_purok</td><td>D. Lugar</td><td class="td-muted text-xs">"Purok N" is picked out of a full address</td></tr>
+          <tr><td><strong>incident_summary</strong></td><td>E. Salaysay</td><td style="color: var(--clr-warning); font-weight: 600;" class="text-xs">required — rows without it are skipped</td></tr>
+          <tr><td>statement_writer</td><td>Pangalan ng Sumulat ng Salaysay</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>statement_date</td><td>Sumulat: Petsa</td><td class="td-muted text-xs">YYYY-MM-DD</td></tr>
+          <tr><td>statement_time</td><td>Sumulat: Oras</td><td class="td-muted text-xs">HH:MM</td></tr>
+          <tr><td>witness</td><td>Testigo: Pangalan</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>witness_age</td><td>Testigo: Edad</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>witness_address</td><td>Testigo: Tirahan</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>witness_contact</td><td>Testigo: Contact No.</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>desk_officer</td><td>Desk Officer / Imbestigador</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>action_taken</td><td>Action Taken</td><td class="td-muted text-xs">optional</td></tr>
+          <tr><td>status</td><td>Case Status</td><td class="td-muted text-xs">e.g. Settled, For Hearing, Referred</td></tr>
+          <tr><td>incident_type_primary</td><td>Primary Type</td><td class="td-muted text-xs">leave blank and SEA-LION classifies it</td></tr>
+          <tr><td>incident_type_secondary</td><td>Secondary Type</td><td class="td-muted text-xs">optional overlap</td></tr>
+          <tr><td>pnp_classification</td><td>PNP Classification</td><td class="td-muted text-xs">blank = follows from the type: {{ pnp_tiers|join(' / ') }}</td></tr>
+          <tr><td>category_group</td><td>Category Group</td><td class="td-muted text-xs">blank = follows from the type</td></tr>
+          <tr><td>kp_status</td><td>Katarungang Pambarangay</td><td class="td-muted text-xs">blank = follows from the type: {{ kp_statuses|join(' / ') }}</td></tr>
+          <tr><td>readability</td><td>—</td><td class="td-muted text-xs">readable / partial / unreadable — partial or unreadable goes to the Review Queue</td></tr>
+          <tr><td>remarks</td><td>Remarks</td><td class="td-muted text-xs">optional</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs" style="color: var(--clr-muted); margin-top: var(--space-3);">
+      Spreadsheets from the encoding schema (headers such as "Location/Purok", "Reporting Party",
+      "Narrative/Summary", "Incident Type") are read too. An entry already in the system is skipped,
+      so importing the same file twice does not duplicate records.
+    </p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var zone = document.getElementById('upload-zone');
+  var btn  = document.getElementById('import-btn');
+
+  function handleFile(input) {
+    if (input.files && input.files[0]) {
+      document.getElementById('upload-text').textContent = input.files[0].name;
+      document.getElementById('upload-sub').textContent  = (input.files[0].size / 1024).toFixed(1) + ' KB';
+      zone.style.borderColor = 'var(--clr-accent)';
+      btn.disabled = false;
+    }
+  }
+
+  zone.addEventListener('dragover', function(e) {
+    e.preventDefault(); zone.classList.add('dragover');
+  });
+  zone.addEventListener('dragleave', function() { zone.classList.remove('dragover'); });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault(); zone.classList.remove('dragover');
+    var fi = document.getElementById('file-input');
+    fi.files = e.dataTransfer.files;
+    handleFile(fi);
+  });
+
+  document.getElementById('import-form').addEventListener('submit', function() {
+    btn.textContent = 'Importing… (classifying entries without a type can take a while)';
+    btn.disabled = true;
+  });
+</script>
+{% endblock %}

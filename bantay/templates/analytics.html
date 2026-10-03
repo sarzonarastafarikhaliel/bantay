@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}Analytics — BANTAY{% endblock %}
+{% block topbar_title %}Advanced Analytics{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
+{% block page_content %}
+
+<div class="page-header">
+  <h1>Analytics</h1>
+  <p>Cross-tabulations, risk indicators, and hotspot analysis.</p>
+</div>
+
+<!-- Risk Indicators -->
+<div class="section-header">
+  <span class="section-title">Trend-Based Risk Indicators</span>
+</div>
+{% if risk_indicators %}
+<div class="risk-grid mb-6" style="margin-bottom: var(--space-6);">
+  {% for cat, info in risk_indicators.items() %}
+  <div class="risk-card">
+    <div class="risk-card__label" title="{{ cat }}">{{ cat }}</div>
+    <div class="risk-card__status" style="margin-bottom: var(--space-2);">
+      {% if info.status == 'rising' %}
+        <span class="badge badge--rising">↑ Rising</span>
+      {% elif info.status == 'declining' %}
+        <span class="badge badge--declining">↓ Declining</span>
+      {% else %}
+        <span class="badge badge--stable">→ Stable</span>
+      {% endif %}
+    </div>
+    <div class="text-xs text-muted">
+      {{ info.prev_month }}: {{ info.prev }} → {{ info.last_month }}: {{ info.last }}
+      (Δ {{ '%+d' % info.delta }})
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted mb-6" style="margin-bottom: var(--space-6);">Not enough temporal data for risk indicators.</p>
+{% endif %}
+
+<!-- Hotspot Analysis -->
+<div class="section-header">
+  <span class="section-title">Hotspot Analysis — Incident Concentration by Purok</span>
+</div>
+{% if mapped_hotspots %}
+<div id="hotspot-map" class="hotspot-map mb-4"></div>
+{% if hotspots|length > mapped_hotspots|length %}
+<p class="text-xs text-muted mb-4">
+  {{ hotspots|length - mapped_hotspots|length }} purok(s) not shown on the map yet — an automatic coordinate lookup
+  found nothing inside Barangay Anunas for them. They still appear in the ranking below.
+</p>
+{% endif %}
+{% else %}
+<p class="text-muted mb-4">
+  No purok coordinates on file yet — add them to <code>data/purok_coordinates.json</code> to enable the map view.
+  Ranking below still works from incident counts alone.
+</p>
+{% endif %}
+{% if hotspots %}
+<div class="hotspot-list mb-6">
+  {% for h in hotspots %}
+  <div class="hotspot-item">
+    <div class="hotspot-item__rank">#{{ loop.index }}</div>
+    <div class="hotspot-item__info">
+      <div class="hotspot-item__name">{{ h.purok }}</div>
+      <div class="text-xs text-muted">Most common: {{ h.top_category }}</div>
+    </div>
+    <div class="hotspot-item__bar">
+      <span class="hotspot-bar hotspot-bar--{{ h.severity }}"><span class="hotspot-bar__fill" style="width:{{ h.pct }}%"></span></span>
+    </div>
+    <div class="hotspot-item__count">{{ h.count }}</div>
+    <span class="badge badge--hotspot-{{ h.severity }}">{{ h.severity | capitalize }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted mb-6">No location data available.</p>
+{% endif %}
+
+<!-- Cross-tab: Category × Purok -->
+<div class="section-header">
+  <span class="section-title">Category × Purok Cross-Tabulation</span>
+</div>
+{% if cross_tabs.puroks %}
+<div class="crosstab-wrap mb-6" style="margin-bottom: var(--space-6);">
+  <table class="crosstab">
+    <thead>
+      <tr>
+        <th style="text-align: left; min-width: 180px;">Category</th>
+        {% for p in cross_tabs.puroks %}
+        <th>{{ p }}</th>
+        {% endfor %}
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cat in cross_tabs.categories %}
+      {% set row_total = cross_tabs.cat_purok.get(cat, {}).values() | sum %}
+      <tr>
+        <td style="text-align: left; font-size: var(--font-size-xs); font-weight: 500;">{{ cat }}</td>
+        {% for p in cross_tabs.puroks %}
+          {% set val = cross_tabs.cat_purok.get(cat, {}).get(p, 0) %}
+          <td class="{% if val >= 10 %}cell-high{% elif val >= 5 %}cell-mid{% elif val == 0 %}cell-zero{% endif %}">
+            {{ val if val else '—' }}
+          </td>
+        {% endfor %}
+        <td style="font-weight: 600;">{{ row_total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted mb-6" style="margin-bottom: var(--space-6);">No data available.</p>
+{% endif %}
+
+<!-- Cross-tab: Category × Month -->
+<div class="section-header">
+  <span class="section-title">Category × Month Cross-Tabulation</span>
+</div>
+{% if cross_tabs.months %}
+<div class="crosstab-wrap mb-6" style="margin-bottom: var(--space-6);">
+  <table class="crosstab">
+    <thead>
+      <tr>
+        <th style="text-align: left; min-width: 180px;">Category</th>
+        {% for m in cross_tabs.months %}
+        <th>{{ m }}</th>
+        {% endfor %}
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cat in cross_tabs.categories %}
+      {% set row_total = cross_tabs.cat_month.get(cat, {}).values() | sum %}
+      <tr>
+        <td style="text-align: left; font-size: var(--font-size-xs); font-weight: 500;">{{ cat }}</td>
+        {% for m in cross_tabs.months %}
+          {% set val = cross_tabs.cat_month.get(cat, {}).get(m, 0) %}
+          <td class="{% if val >= 10 %}cell-high{% elif val >= 5 %}cell-mid{% elif val == 0 %}cell-zero{% endif %}">
+            {{ val if val else '—' }}
+          </td>
+        {% endfor %}
+        <td style="font-weight: 600;">{{ row_total }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted mb-6" style="margin-bottom: var(--space-6);">No temporal data available.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if mapped_hotspots %}
+<script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+<script>
+  const map = L.map('hotspot-map').setView({{ map_center | tojson }}, 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  const severityColor = { high: '#e5433a', medium: '#e0a025', low: '#2f7de1' };
+  const hotspots = {{ mapped_hotspots | tojson }};
+  const bounds = [];
+  hotspots.forEach(h => {
+    const marker = L.circleMarker([h.lat, h.lon], {
+      radius: 8 + (h.pct / 100) * 12,
+      color: severityColor[h.severity],
+      fillColor: severityColor[h.severity],
+      fillOpacity: 0.55,
+      weight: 2,
+    }).addTo(map);
+    marker.bindPopup(`<strong>${h.purok}</strong><br>${h.count} incident(s) &middot; ${h.severity} concentration<br>Most common: ${h.top_category}`);
+    bounds.push([h.lat, h.lon]);
+  });
+  if (bounds.length > 1) map.fitBounds(bounds, { padding: [30, 30] });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+Flask==3.0.3
+Flask-Login==0.6.3
+Flask-SQLAlchemy==3.1.1
+scikit-learn==1.5.1
+pandas==2.2.2
+joblib==1.4.2
+scipy==1.13.1
+imbalanced-learn==0.12.3
+pytest==8.3.2
+matplotlib==3.9.2
+notebook==7.2.2
+calamancy==0.2.3
+pypdf==6.19.0
+python-docx==1.2.0

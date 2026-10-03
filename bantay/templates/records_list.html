@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block title %}Records — BANTAY{% endblock %}
+{% block topbar_title %}Blotter Records{% endblock %}
+{% block page_content %}
+
+<div class="page-header flex items-center justify-between flex-wrap gap-2" style="margin-bottom: var(--space-4);">
+  <div>
+    <h1>All Records</h1>
+    <p>{{ records.total }} total blotter records in system.</p>
+  </div>
+  <div class="flex gap-2 flex-wrap">
+    <a href="{{ url_for('records.new_record') }}" class="btn btn--primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Blotter Record
+    </a>
+    <form method="post" action="{{ url_for('records.check_review') }}">
+      <button class="btn btn--ghost" type="submit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Check for Review
+      </button>
+    </form>
+    <a href="{{ url_for('records.export_records_docx', **filters) }}" class="btn btn--ghost"
+       title="One blotter form per record matching the current filters">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download .docx
+    </a>
+    {% if current_user.role == 'admin' %}
+    <button class="btn btn--danger btn--sm" id="delete-all-btn" type="button"
+            onclick="openDeleteModal()" {% if records.total == 0 %}disabled{% endif %}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      Delete All
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<form class="filter-bar" method="get">
+  <div class="form-group">
+    <label class="form-label">Category</label>
+    <select class="form-control" name="category">
+      <option value="">All types</option>
+      {% for c in categories %}
+      <option value="{{ c }}" {% if filters.get('category') == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Purok</label>
+    <select class="form-control" name="location">
+      <option value="">All puroks</option>
+      {% for l in locations %}
+      <option value="{{ l }}" {% if filters.get('location') == l %}selected{% endif %}>{{ l }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Status</label>
+    <select class="form-control" name="status">
+      <option value="">All statuses</option>
+      <option value="accepted"    {% if filters.get('status') == 'accepted'     %}selected{% endif %}>Accepted</option>
+      <option value="needs_review"{% if filters.get('status') == 'needs_review' %}selected{% endif %}>Needs Review</option>
+      <option value="corrected"   {% if filters.get('status') == 'corrected'    %}selected{% endif %}>Corrected</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">KP Referability</label>
+    <select class="form-control" name="kp_status">
+      <option value="">All</option>
+      <option value="KP-Mediable"  {% if filters.get('kp_status') == 'KP-Mediable'  %}selected{% endif %}>KP-Mediable</option>
+      <option value="Conditional"  {% if filters.get('kp_status') == 'Conditional'  %}selected{% endif %}>Conditional</option>
+      <option value="Excluded"     {% if filters.get('kp_status') == 'Excluded'     %}selected{% endif %}>Excluded</option>
+      <option value="Unclassified" {% if filters.get('kp_status') == 'Unclassified' %}selected{% endif %}>Unclassified</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">From</label>
+    <input class="form-control" type="date" name="date_from" value="{{ filters.get('date_from','') }}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">To</label>
+    <input class="form-control" type="date" name="date_to" value="{{ filters.get('date_to','') }}">
+  </div>
+  <div class="form-group" style="flex: 2; min-width: 160px;">
+    <label class="form-label">Search</label>
+    <input class="form-control" name="q" placeholder="Search narrative…" value="{{ filters.get('q','') }}">
+  </div>
+  <div class="form-group" style="flex: 0;">
+    <label class="form-label">&nbsp;</label>
+    <div class="flex gap-2">
+      <button class="btn btn--primary btn--sm" type="submit">Filter</button>
+      <a class="btn btn--ghost btn--sm" href="{{ url_for('records.list_records') }}">Reset</a>
+    </div>
+  </div>
+</form>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Purok</th>
+        <th>Primary Type</th>
+        <th class="col-optional">Secondary</th>
+        <th>Narrative</th>
+        <th class="col-optional">Confidence</th>
+        <th>Status</th>
+        <th class="col-optional">KP Referability</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records.items %}
+      <tr>
+        <td class="td-muted" style="white-space: nowrap;">{{ r.date or '—' }}</td>
+        <td class="td-muted" style="white-space: nowrap;">{{ r.location_purok or '—' }}</td>
+        <td style="font-size: var(--font-size-xs);">{{ r.incident_type_primary or '—' }}</td>
+        <td class="td-muted col-optional" style="font-size: var(--font-size-xs);">{{ r.incident_type_secondary or '—' }}</td>
+        <td class="td-truncate">{{ (r.narrative|visible_narrative)[:100] }}</td>
+        <td class="col-optional">
+          {% if r.model_confidence is not none %}
+            {% set pct = (r.model_confidence * 100)|int %}
+            {% if r.model_confidence >= 0.6 %}
+              <span class="conf-bar conf-bar--high"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+            {% elif r.model_confidence >= 0.3 %}
+              <span class="conf-bar conf-bar--mid"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+            {% else %}
+              <span class="conf-bar conf-bar--low"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+            {% endif %}
+            <span class="text-xs td-muted"> {{ "%.2f"|format(r.model_confidence) }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if r.review_status == 'accepted' %}
+            <span class="badge badge--accepted">Accepted</span>
+          {% elif r.review_status == 'needs_review' %}
+            {% if current_user.role in ('reviewer', 'admin') %}
+            <a href="{{ url_for('review.resolve', record_id=r.id) }}" class="badge badge--needs-review" style="text-decoration: none;">Review</a>
+            {% else %}
+            <span class="badge badge--needs-review">Needs Review</span>
+            {% endif %}
+          {% else %}
+            <span class="badge badge--corrected">Corrected</span>
+          {% endif %}
+        </td>
+        <td class="col-optional">
+          {% if r.kp_status == 'KP-Mediable' %}
+            <span class="badge badge--accepted">{{ r.kp_status }}</span>
+          {% elif r.kp_status == 'Conditional' %}
+            <span class="badge badge--needs-review">{{ r.kp_status }}</span>
+          {% elif r.kp_status == 'Excluded' %}
+            <span class="badge badge--corrected">{{ r.kp_status }}</span>
+          {% else %}
+            <span class="badge">{{ r.kp_status or '—' }}</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="flex gap-1 justify-end">
+            <a href="{{ url_for('records.view_record', record_id=r.id) }}" class="btn btn--ghost btn--sm row-action">View</a>
+            {% if current_user.role == 'admin' %}
+            <form method="post" action="{{ url_for('records.delete_record', record_id=r.id) }}"
+                  onsubmit="return confirm('Delete record #{{ r.id }}?')">
+              <button class="btn btn--danger btn--sm row-action" type="submit">✕</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if records.pages > 1 %}
+<nav class="pagination" aria-label="Pagination">
+  {% if records.has_prev %}
+    <a class="page-btn" href="{{ url_for('records.list_records', page=records.prev_num, **filters) }}">&lsaquo;</a>
+  {% endif %}
+  {% for p in records.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+    {% if p %}
+      <a class="page-btn {% if p == records.page %}active{% endif %}"
+         href="{{ url_for('records.list_records', page=p, **filters) }}">{{ p }}</a>
+    {% else %}
+      <span class="page-btn" style="border: none; background: transparent; color: var(--clr-muted);">…</span>
+    {% endif %}
+  {% endfor %}
+  {% if records.has_next %}
+    <a class="page-btn" href="{{ url_for('records.list_records', page=records.next_num, **filters) }}">&rsaquo;</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+<!-- Delete All Modal -->
+{% if current_user.role == 'admin' %}
+<div id="delete-modal" style="
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: hsl(222,20%,4%/0.8); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;">
+  <div style="
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    max-width: 420px; width: 90%;
+    box-shadow: var(--shadow-lg);
+    animation: flashIn 0.2s ease;">
+    <h4 style="margin-bottom: var(--space-3); color: var(--clr-danger);">
+      ⚠ Delete All Records
+    </h4>
+    <p style="font-size: var(--font-size-sm); color: var(--clr-muted); margin-bottom: var(--space-5);">
+      This will permanently delete <strong style="color: var(--clr-text);">{{ records.total }} records</strong>
+      from the database. This action cannot be undone.
+    </p>
+    <p style="font-size: var(--font-size-sm); margin-bottom: var(--space-3);">
+      Type <strong>DELETE ALL</strong> to confirm:
+    </p>
+    <form method="post" action="{{ url_for('records.delete_all') }}" id="delete-all-form">
+      <input class="form-control" type="text" id="confirm-input" name="confirm"
+             placeholder="DELETE ALL" autocomplete="off"
+             style="margin-bottom: var(--space-4); font-family: monospace; letter-spacing: 0.05em;">
+      <div class="flex gap-2">
+        <button class="btn btn--danger" type="submit" id="confirm-delete-btn" disabled>
+          Delete All Records
+        </button>
+        <button class="btn btn--ghost" type="button" onclick="closeDeleteModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  var modal = document.getElementById('delete-modal');
+  var confirmInput = document.getElementById('confirm-input');
+  var confirmBtn = document.getElementById('confirm-delete-btn');
+
+  function openDeleteModal() {
+    modal.style.display = 'flex';
+    confirmInput.value = '';
+    confirmBtn.disabled = true;
+    setTimeout(function() { confirmInput.focus(); }, 50);
+  }
+
+  function closeDeleteModal() {
+    modal.style.display = 'none';
+  }
+
+  confirmInput.addEventListener('input', function() {
+    confirmBtn.disabled = this.value !== 'DELETE ALL';
+  });
+
+  // Close on backdrop click
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) closeDeleteModal();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDeleteModal();
+  });
+</script>
+{% endif %}
+
+{% endblock %}

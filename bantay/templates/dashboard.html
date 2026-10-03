@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — BANTAY{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+{% block page_content %}
+
+<div class="page-header">
+  <h1>Incident Dashboard</h1>
+  <p>Barangay Anunas — real-time incident overview and trend analysis.</p>
+</div>
+
+
+<!-- Summary Cards -->
+<div class="stats-grid">
+  <div class="card card--stat" style="--card-accent: var(--clr-accent);">
+    <span class="stat-label">Total Records</span>
+    <span class="stat-value" id="cnt-total">{{ total }}</span>
+    <span class="stat-sub">All incidents in system</span>
+  </div>
+  <div class="card card--stat" style="--card-accent: var(--clr-success);">
+    <span class="stat-label">Categorized</span>
+    <span class="stat-value">{{ categorized }}</span>
+    <span class="stat-sub">Have primary type</span>
+  </div>
+  <div class="card card--stat" style="--card-accent: var(--clr-warning);">
+    <span class="stat-label">Needs Review</span>
+    <span class="stat-value">{{ needs_review }}</span>
+    <span class="stat-sub">Awaiting staff verification</span>
+  </div>
+  <div class="card card--stat" style="--card-accent: var(--clr-info);">
+    <span class="stat-label">Corrected</span>
+    <span class="stat-value">{{ corrected }}</span>
+    <span class="stat-sub">Manually reviewed</span>
+  </div>
+  <div class="card card--stat" style="--card-accent: var(--clr-accent-2);">
+    <span class="stat-label">Conf. Threshold</span>
+    <span class="stat-value" style="font-size: var(--font-size-2xl);">{{ "%.0f"|format(confidence_threshold * 100) }}%</span>
+    <span class="stat-sub">Auto-accept cutoff</span>
+  </div>
+</div>
+
+<!-- Katarungang Pambarangay Referability (RA 7160 Sec. 408) -->
+<div class="section-header">
+  <span class="section-title">Katarungang Pambarangay Referability</span>
+</div>
+<div class="stats-grid mb-6" style="margin-bottom: var(--space-3);">
+  <a class="card card--stat" style="--card-accent: var(--clr-success); text-decoration: none; color: inherit;"
+     href="{{ url_for('records.list_records', kp_status='KP-Mediable') }}">
+    <span class="stat-label">KP-Mediable</span>
+    <span class="stat-value">{{ kp_counts.get('KP-Mediable', 0) }}</span>
+    <span class="stat-sub">Within Lupon authority — Sec. 408</span>
+  </a>
+  <a class="card card--stat" style="--card-accent: var(--clr-warning); text-decoration: none; color: inherit;"
+     href="{{ url_for('records.list_records', kp_status='Conditional') }}">
+    <span class="stat-label">Conditional</span>
+    <span class="stat-value">{{ kp_counts.get('Conditional', 0) }}</span>
+    <span class="stat-sub">Depends on penalty / value / severity — investigator decides</span>
+  </a>
+  <a class="card card--stat" style="--card-accent: var(--clr-info); text-decoration: none; color: inherit;"
+     href="{{ url_for('records.list_records', kp_status='Excluded') }}">
+    <span class="stat-label">Excluded</span>
+    <span class="stat-value">{{ kp_counts.get('Excluded', 0) }}</span>
+    <span class="stat-sub">Outside Lupon authority — refer</span>
+  </a>
+  <a class="card card--stat" style="text-decoration: none; color: inherit;"
+     href="{{ url_for('records.list_records', kp_status='Unclassified') }}">
+    <span class="stat-label">Unclassified</span>
+    <span class="stat-value">{{ kp_counts.get('Unclassified', 0) }}</span>
+    <span class="stat-sub">No incident type assigned yet</span>
+  </a>
+</div>
+<p class="text-sm" style="color: var(--clr-muted); margin-bottom: var(--space-6);">
+  Screening reference derived from the incident type. Independent of the PNP crime tier — a crime can still be
+  KP-mediable when its penalty falls within RA 7160 Sec. 408[c]. Certification to file action remains the
+  Lupon Chairman's determination.
+</p>
+
+<!-- Category Group Breakdown -->
+<div class="section-header">
+  <span class="section-title">Category Group Breakdown</span>
+</div>
+<div class="stats-grid mb-6" style="margin-bottom: var(--space-6);">
+  {% for group in ['Civil Dispute', 'Criminal/Penal Code', 'Property/Lost Items', 'Family/Domestic', 'Community Disturbance', 'Administrative/Referral', 'Catch-all'] %}
+  <div class="card card--stat" style="--card-accent: var(--clr-accent);">
+    <span class="stat-label">{{ group }}</span>
+    <span class="stat-value">{{ group_counts.get(group, 0) }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Model Status Card -->
+<div class="card mb-6" style="margin-bottom: var(--space-6);">
+  <div class="flex items-center justify-between flex-wrap gap-2">
+    <div>
+      <div class="stat-label">ML Model Status</div>
+      {% if model_loaded %}
+        <div class="text-sm" style="color: var(--clr-success); font-weight: 600;">
+          Loaded — trained {{ model_trained_at or 'unknown time' }}
+        </div>
+      {% else %}
+        <div class="text-sm text-danger font-semibold">No trained model — run training first</div>
+      {% endif %}
+    </div>
+    <div class="flex gap-2">
+      {% if current_user.role == 'admin' %}
+      <form method="post" action="{{ url_for('dashboard.reload_model') }}">
+        <button class="btn btn--ghost btn--sm" type="submit">Reload Model</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% if comparison_results %}
+  <div class="text-xs text-muted mt-2">
+    Best model: <strong style="color: var(--clr-accent)">{{ comparison_results.best_model }}</strong>
+    (F1 = {{ "%.4f"|format(comparison_results.results | selectattr('model', 'eq', comparison_results.best_model) | map(attribute='f1') | first) }})
+  </div>
+  {% endif %}
+</div>
+
+<!-- Filters -->
+<form class="filter-bar" method="get" id="filter-form">
+  <div class="form-group">
+    <label class="form-label">Category</label>
+    <select class="form-control" name="category">
+      <option value="">All categories</option>
+      {% for c in categories %}
+      <option value="{{ c }}" {% if filters.get('category') == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Purok</label>
+    <select class="form-control" name="location">
+      <option value="">All puroks</option>
+      {% for l in locations %}
+      <option value="{{ l }}" {% if filters.get('location') == l %}selected{% endif %}>{{ l }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">From</label>
+    <input class="form-control" type="date" name="date_from" value="{{ filters.get('date_from','') }}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">To</label>
+    <input class="form-control" type="date" name="date_to" value="{{ filters.get('date_to','') }}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Search</label>
+    <input class="form-control" name="q" placeholder="Search narrative…" value="{{ filters.get('q','') }}">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Trend</label>
+    <select class="form-control" name="trend">
+      <option value="monthly" {% if trend_mode == 'monthly' %}selected{% endif %}>Monthly</option>
+      <option value="yearly"  {% if trend_mode == 'yearly'  %}selected{% endif %}>Yearly</option>
+    </select>
+  </div>
+  <div class="form-group" style="flex: 0;">
+    <label class="form-label">&nbsp;</label>
+    <div class="flex gap-2">
+      <button class="btn btn--primary btn--sm" type="submit">Filter</button>
+      <a class="btn btn--ghost btn--sm" href="{{ url_for('dashboard.index') }}">Reset</a>
+    </div>
+  </div>
+</form>
+
+<!-- Risk Indicators -->
+{% if risk_indicators %}
+<div class="section-header">
+  <span class="section-title">Trend-Based Risk Indicators</span>
+  <a href="{{ url_for('analytics.index') }}" class="btn btn--ghost btn--sm">Full Analysis</a>
+</div>
+<div class="risk-grid mb-4" style="margin-bottom: var(--space-4);">
+  {% for cat, status in risk_indicators.items() %}
+  <div class="risk-card">
+    <div class="risk-card__label" title="{{ cat }}">{{ cat }}</div>
+    <div class="risk-card__status">
+      {% if status == 'rising' %}
+        <span class="badge badge--rising">↑ Rising</span>
+      {% elif status == 'declining' %}
+        <span class="badge badge--declining">↓ Declining</span>
+      {% else %}
+        <span class="badge badge--stable">→ Stable</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Charts -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <div class="chart-card__title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+      Incident Category Distribution
+    </div>
+    <canvas id="categoryChart" height="300"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card__title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Hotspot Areas by Purok
+    </div>
+    <canvas id="hotspotChart" height="300"></canvas>
+  </div>
+</div>
+<div class="chart-card mb-6" style="margin-bottom: var(--space-6);">
+  <div class="chart-card__title">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    {{ 'Yearly' if trend_mode == 'yearly' else 'Monthly' }} Incident Trend
+  </div>
+  <canvas id="trendChart" height="180"></canvas>
+</div>
+
+<!-- Recent Records -->
+<div class="section-header">
+  <span class="section-title">Recent Records</span>
+  <a href="{{ url_for('records.list_records') }}" class="btn btn--ghost btn--sm">View All</a>
+</div>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Purok</th>
+        <th>Primary Type</th>
+        <th>Narrative</th>
+        <th>Status</th>
+        <th>Confidence</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in recent_records %}
+      <tr>
+        <td class="td-muted">{{ r.date or '—' }}</td>
+        <td class="td-muted">{{ r.location_purok or '—' }}</td>
+        <td><span style="font-size: var(--font-size-xs);">{{ r.incident_type_primary or '—' }}</span></td>
+        <td class="td-truncate">{{ (r.narrative|visible_narrative)[:90] }}</td>
+        <td>
+          {% if r.review_status == 'accepted' %}
+            <span class="badge badge--accepted">Accepted</span>
+          {% elif r.review_status == 'needs_review' %}
+            <span class="badge badge--needs-review">Review</span>
+          {% else %}
+            <span class="badge badge--corrected">Corrected</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if r.model_confidence is not none %}
+            {% set pct = (r.model_confidence * 100)|int %}
+            {% if r.model_confidence >= 0.6 %}
+              <span class="conf-bar conf-bar--high"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+            {% elif r.model_confidence >= 0.3 %}
+              <span class="conf-bar conf-bar--mid"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+            {% else %}
+              <span class="conf-bar conf-bar--low"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+            {% endif %}
+            <span class="text-xs td-muted" style="margin-left: 4px;">{{ "%.2f"|format(r.model_confidence) }}</span>
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  const ACCENT     = 'hsl(212,90%,58%)';
+  const ACCENT2    = 'hsl(195,80%,50%)';
+  const SURFACE2   = 'hsl(222,16%,17%)';
+  const TEXT_MUTED = 'hsl(215,15%,55%)';
+  const GRID_COLOR = 'hsl(222,14%,22%)';
+
+  Chart.defaults.color = TEXT_MUTED;
+  Chart.defaults.font.family = 'Inter, sans-serif';
+  Chart.defaults.font.size   = 11;
+
+  const palette = [
+    '#2196f3','#00bcd4','#4caf50','#ff9800','#e91e63',
+    '#9c27b0','#ff5722','#607d8b','#795548','#009688','#3f51b5','#ffc107'
+  ];
+
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ category_counts.keys() | list | tojson }},
+      datasets: [{
+        label: 'Incidents',
+        data: {{ category_counts.values() | list | tojson }},
+        backgroundColor: palette,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED } },
+        y: { grid: { color: 'transparent' }, ticks: { color: TEXT_MUTED } },
+      }
+    }
+  });
+
+  new Chart(document.getElementById('hotspotChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ purok_counts.keys() | list | tojson }},
+      datasets: [{
+        label: 'Incidents',
+        data: {{ purok_counts.values() | list | tojson }},
+        backgroundColor: ACCENT,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED } },
+        y: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED } },
+      }
+    }
+  });
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: {{ trend_counts.keys() | list | tojson }},
+      datasets: [{
+        label: 'Incidents',
+        data: {{ trend_counts.values() | list | tojson }},
+        borderColor: ACCENT,
+        backgroundColor: 'hsl(212,90%,58%,0.08)',
+        pointBackgroundColor: ACCENT,
+        pointRadius: 4,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED } },
+        y: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED } },
+      }
+    }
+  });
+</script>
+{% endblock %}

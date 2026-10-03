@@ -1,0 +1,457 @@
+{
+ "fallback": "Others / Miscellaneous",
+ "categories": [
+  {
+   "name": "Robbery",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Index Crime",
+   "pnp_basis": "RPC Art. 293-299 (Robbery)",
+   "kp_status": "Excluded",
+   "kp_basis": "RPC Art. 293-299 — prision correccional to reclusion perpetua, far beyond the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]).",
+   "aliases": [
+    "robbery",
+    "hold-up",
+    "holdap"
+   ]
+  },
+  {
+   "name": "Theft",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Index Crime",
+   "pnp_basis": "RPC Art. 308-311 (Theft)",
+   "kp_status": "Conditional",
+   "kp_basis": "Penalty scales with the value taken (RPC Art. 309 as amended by RA 10951). Mediable only for small values falling within the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]). Establish the value first.",
+   "aliases": [
+    "theft",
+    "nakaw",
+    "stolen"
+   ]
+  },
+  {
+   "name": "Slight Physical Injury",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Index Crime",
+   "pnp_basis": "RPC Art. 266 (Slight Physical Injuries)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "RPC Art. 266 — arresto menor (1–30 days), within the Sec. 408[c] ceiling. A crime, but still KP-mediable.",
+   "aliases": [
+    "slight physical injury",
+    "slight injury"
+   ]
+  },
+  {
+   "name": "Physical Injury",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Index Crime",
+   "pnp_basis": "RPC Art. 262 (Mutilation), 263 (Serious), 265 (Less Serious) Physical Injuries",
+   "kp_status": "Conditional",
+   "kp_basis": "Mediable if LESS SERIOUS (RPC Art. 265, arresto mayor). EXCLUDED if SERIOUS (Art. 263) or mutilation (Art. 262) — those exceed the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]). Check the medical certificate and days of incapacity.",
+   "aliases": [
+    "physical injury",
+    "pisikal na pinsala",
+    "fistfight",
+    "punch",
+    "pag-aaway",
+    "quarrel",
+    "altercation",
+    "stone throwing"
+   ]
+  },
+  {
+   "name": "Lost Property / Document",
+   "group": "Property/Lost Items",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 (barangay blotter recording); Civil Code Art. 719-720 (finder of lost movable property)",
+   "kp_status": "Excluded",
+   "kp_basis": "Not a dispute between parties. Blotter recording only; Civil Code Art. 719-720 governs found property.",
+   "aliases": [
+    "lost property",
+    "lost document",
+    "nawawalang ari-arian",
+    "nawala"
+   ]
+  },
+  {
+   "name": "Ejectment",
+   "group": "Civil Dispute",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1673 (grounds for judicial ejectment)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Civil dispute; prior barangay conciliation is a condition precedent to filing (RA 7160 Sec. 412[a]).",
+   "aliases": [
+    "ejectment",
+    "vacate",
+    "paalis"
+   ]
+  },
+  {
+   "name": "RA 9262 (VAWC)",
+   "group": "Family/Domestic",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RA 9262 (Anti-Violence Against Women and Their Children Act)",
+   "kp_status": "Excluded",
+   "kp_basis": "EXPRESS STATUTORY BAR — RA 9262 Sec. 33 prohibits barangay conciliation of VAWC cases. Do not mediate; assist with a Barangay Protection Order (Sec. 14) and refer.",
+   "aliases": [
+    "ra 9262",
+    "vawc",
+    "violence against women"
+   ]
+  },
+  {
+   "name": "Online Defamation / Threat",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RA 10175 (Cybercrime Prevention Act) in relation to RPC Art. 355 (Libel) / Art. 282 (Grave Threats)",
+   "kp_status": "Excluded",
+   "kp_basis": "RA 10175 Sec. 6 raises the penalty one degree above RPC Art. 355, exceeding the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]).",
+   "aliases": [
+    "online defamation",
+    "cyber libel",
+    "online threat",
+    "facebook threat"
+   ]
+  },
+  {
+   "name": "Oral Defamation",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); may escalate to RPC Art. 358 (Oral Defamation) if unresolved",
+   "kp_status": "Conditional",
+   "kp_basis": "Mediable if SLIGHT slander (RPC Art. 358, arresto menor). SERIOUS slander reaches prision correccional minimum and exceeds the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]).",
+   "aliases": [
+    "oral defamation",
+    "slander",
+    "mura",
+    "harassment"
+   ]
+  },
+  {
+   "name": "Marital Relation",
+   "group": "Family/Domestic",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Family Code Art. 149 et seq. (The Family)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "RA 7160 Sec. 408 — but re-screen for RA 9262 (VAWC). If any element of violence appears, KP is barred.",
+   "aliases": [
+    "marital relation",
+    "asawa",
+    "live-in partner",
+    "jealousy"
+   ]
+  },
+  {
+   "name": "Malicious Mischief / Property Damage",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 327-331 (Malicious Mischief)",
+   "kp_status": "Conditional",
+   "kp_basis": "Penalty scales with the damage value (RPC Art. 328-329). Establish the value, then apply the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]).",
+   "aliases": [
+    "malicious mischief",
+    "vandalism",
+    "property damage",
+    "pagkasira ng ari-arian"
+   ]
+  },
+  {
+   "name": "Property Claim / Damage",
+   "group": "Civil Dispute",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 2176 (quasi-delict)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Civil claim under Civil Code Art. 2176 — RA 7160 Sec. 408.",
+   "aliases": [
+    "property claim",
+    "damage claim"
+   ]
+  },
+  {
+   "name": "Grave Threats / Light Threats",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 282 (Grave Threats); Art. 285 (Light Threats)",
+   "kp_status": "Conditional",
+   "kp_basis": "Mediable if LIGHT threats (RPC Art. 285, arresto menor). GRAVE threats (Art. 282) depend on whether a condition was attached and achieved — apply the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]).",
+   "aliases": [
+    "grave threat",
+    "light threat",
+    "banta"
+   ]
+  },
+  {
+   "name": "Unjust Vexation",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 287 (Unjust Vexation)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "RPC Art. 287 — arresto menor / fine, within the Sec. 408[c] ceiling.",
+   "aliases": [
+    "unjust vexation",
+    "vexation"
+   ]
+  },
+  {
+   "name": "Alarms and Scandals",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 155 (Alarms and Scandals)",
+   "kp_status": "Conditional",
+   "kp_basis": "RPC Art. 155 is within the penalty ceiling, but check RA 7160 Sec. 408[d] — with no private offended party, KP does not apply.",
+   "aliases": [
+    "alarms and scandals",
+    "alarming scandal",
+    "public scandal"
+   ]
+  },
+  {
+   "name": "Trespassing",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 280 (Qualified Trespass to Dwelling); Art. 281 (Other Forms of Trespass)",
+   "kp_status": "Conditional",
+   "kp_basis": "Mediable if OTHER FORMS of trespass (RPC Art. 281, arresto menor). EXCLUDED if QUALIFIED trespass to dwelling (Art. 280, prision correccional).",
+   "aliases": [
+    "trespassing",
+    "panghihimasok"
+   ]
+  },
+  {
+   "name": "Noise Complaint",
+   "group": "Community Disturbance",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "Local noise ordinance, enacted under RA 7160 Sec. 16 (General Welfare Clause)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Ordinance violation with a private complainant; fine within the Sec. 408[c] ceiling.",
+   "aliases": [
+    "noise",
+    "ingay",
+    "videoke",
+    "karaoke"
+   ]
+  },
+  {
+   "name": "Neighbor Dispute",
+   "group": "Community Disturbance",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Core Lupon subject matter — RA 7160 Sec. 408.",
+   "aliases": [
+    "neighbor dispute",
+    "kapitbahay"
+   ]
+  },
+  {
+   "name": "Estafa (Swindling)",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 315 (Estafa)",
+   "kp_status": "Conditional",
+   "kp_basis": "Penalty scales with the amount defrauded (RPC Art. 315 as amended by RA 10951). Establish the amount, then apply the penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c]).",
+   "aliases": [
+    "estafa",
+    "swindling",
+    "panloloko"
+   ]
+  },
+  {
+   "name": "Boundary Dispute",
+   "group": "Civil Dispute",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 434 (accion reivindicatoria)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Civil dispute; real property within the same city/municipality (RA 7160 Sec. 408[e]).",
+   "aliases": [
+    "boundary dispute",
+    "boundary",
+    "hangganan"
+   ]
+  },
+  {
+   "name": "Animal-Related Incident",
+   "group": "Community Disturbance",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 2183 (possessor of animal's liability)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Civil liability of the animal's possessor, Civil Code Art. 2183 — RA 7160 Sec. 408.",
+   "aliases": [
+    "animal-related",
+    "aso",
+    "hayop",
+    "dog bite"
+   ]
+  },
+  {
+   "name": "Coercion",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 286 (Grave Coercion); Art. 287 (Light Coercion)",
+   "kp_status": "Conditional",
+   "kp_basis": "Mediable if LIGHT coercion (RPC Art. 287). EXCLUDED if GRAVE coercion (Art. 286, prision correccional).",
+   "aliases": [
+    "coercion",
+    "pamimilit"
+   ]
+  },
+  {
+   "name": "Using Fictitious Names / False Certificates",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 178 (Using Fictitious Name); Art. 171-172 (Falsification)",
+   "kp_status": "Conditional",
+   "kp_basis": "Mediable if use of a fictitious name (RPC Art. 178, arresto mayor). EXCLUDED if falsification (Art. 171-172, prision correccional or higher).",
+   "aliases": [
+    "fictitious name",
+    "false certificate",
+    "pekeng pangalan"
+   ]
+  },
+  {
+   "name": "Breach of Contract",
+   "group": "Civil Dispute",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1170 et seq. (Breach of Obligations)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Civil dispute — RA 7160 Sec. 408.",
+   "aliases": [
+    "breach of contract",
+    "kontrata"
+   ]
+  },
+  {
+   "name": "Demand for Specific Performance",
+   "group": "Civil Dispute",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1191 / 1233 et seq. (Specific Performance)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Civil dispute — RA 7160 Sec. 408.",
+   "aliases": [
+    "specific performance"
+   ]
+  },
+  {
+   "name": "Family/Sibling Dispute",
+   "group": "Family/Domestic",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Family Code provisions on family relations",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "RA 7160 Sec. 408; Family Code Art. 151 requires earnest efforts toward a compromise.",
+   "aliases": [
+    "sibling dispute",
+    "magkapatid"
+   ]
+  },
+  {
+   "name": "Child Custody-Adjacent Concern",
+   "group": "Family/Domestic",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay, referral); Family Code Art. 213 (custody of children)",
+   "kp_status": "Excluded",
+   "kp_basis": "Custody falls within the exclusive original jurisdiction of the Family Courts (RA 8369 Sec. 5). Record and refer; coordinate with the DSWD / VAWC desk.",
+   "aliases": [
+    "child custody",
+    "custody ng bata"
+   ]
+  },
+  {
+   "name": "Vehicular Incident",
+   "group": "Community Disturbance",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 365 (Reckless Imprudence); RA 4136 (Land Transportation and Traffic Code)",
+   "kp_status": "Conditional",
+   "kp_basis": "Reckless imprudence (RPC Art. 365) — the penalty follows the resulting harm. Damage to property alone is normally mediable; EXCLUDED where death or serious physical injury resulted.",
+   "aliases": [
+    "motor accident",
+    "motor vehicle collision",
+    "vehicular",
+    "traffic collision",
+    "hit & run",
+    "hit and run"
+   ]
+  },
+  {
+   "name": "Public Disturbance",
+   "group": "Community Disturbance",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RPC Art. 153 (Tumults and Other Disturbances of Public Order)",
+   "kp_status": "Conditional",
+   "kp_basis": "RPC Art. 153. Check RA 7160 Sec. 408[d] — a purely public-order matter with no private offended party is outside KP.",
+   "aliases": [
+    "public disturbance",
+    "gulo"
+   ]
+  },
+  {
+   "name": "Drug-Related Concern",
+   "group": "Community Disturbance",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RA 9165 (Comprehensive Dangerous Drugs Act of 2002)",
+   "kp_status": "Excluded",
+   "kp_basis": "RA 9165 — penalties far beyond the ceiling, and no private offended party (RA 7160 Sec. 408[d]). Refer to the PNP / PDEA.",
+   "aliases": [
+    "drug-related",
+    "shabu",
+    "droga"
+   ]
+  },
+  {
+   "name": "Missing Person Report",
+   "group": "Administrative/Referral",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 (barangay blotter recording/referral) — not itself an offense",
+   "kp_status": "Excluded",
+   "kp_basis": "Not a dispute between parties; there is nothing to conciliate. Blotter recording and referral only.",
+   "aliases": [
+    "missing person"
+   ]
+  },
+  {
+   "name": "Referral to Police/Other Agency",
+   "group": "Administrative/Referral",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 408-409 (Katarungang Pambarangay jurisdictional exceptions requiring referral)",
+   "kp_status": "Excluded",
+   "kp_basis": "Already a Sec. 408-409 jurisdictional exception — this label exists to record the referral.",
+   "aliases": [
+    "referral to police",
+    "referred to police",
+    "for referral"
+   ]
+  },
+  {
+   "name": "Collection of Sum of Money",
+   "group": "Civil Dispute",
+   "pnp_tier": "Non-Criminal Complaint",
+   "pnp_basis": "RA 7160 Sec. 399-422 (Katarungang Pambarangay); Civil Code Art. 1156 et seq. (Obligations)",
+   "kp_status": "KP-Mediable",
+   "kp_basis": "Civil dispute between residents — RA 7160 Sec. 408.",
+   "aliases": [
+    "sum of money",
+    "collection",
+    "debt",
+    "utang"
+   ]
+  },
+  {
+   "name": "Peeping/Voyeurism",
+   "group": "Criminal/Penal Code",
+   "pnp_tier": "Non-Index Crime",
+   "pnp_basis": "RA 9995 (Anti-Photo and Video Voyeurism Act) if photo/video capture occurred; else RPC Art. 287 (Unjust Vexation)",
+   "kp_status": "Conditional",
+   "kp_basis": "Mediable if it amounts only to unjust vexation (RPC Art. 287). EXCLUDED if photo or video capture occurred — RA 9995 carries 3 to 7 years.",
+   "aliases": [
+    "peeping",
+    "paninilip"
+   ]
+  },
+  {
+   "name": "Others / Miscellaneous",
+   "group": "Catch-all",
+   "pnp_tier": "Unclassified",
+   "pnp_basis": "—",
+   "kp_status": "Unclassified",
+   "kp_basis": "—",
+   "aliases": []
+  }
+ ]
+}

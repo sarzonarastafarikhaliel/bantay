@@ -1,0 +1,26 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+instance/
+*.db
+models/*.joblib
+data/raw/*.csv
+!data/raw/sample.csv
+.pytest_cache/
+
+# private data
+data/raw/
+data/stage/
+data/ocr_calibration*.csv
+data/gold_worksheet*.csv
+data/gold_split.csv
+
+# local tooling / misc
+.claude/
+.agents/
+skills-lock.json
+.tessdata/
+Gemini_Generated_Image_*.jpg
+models/_to_delete/
+Thesis Writing/
