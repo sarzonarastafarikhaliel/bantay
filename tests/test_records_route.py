@@ -142,8 +142,8 @@ def test_admin_sees_the_real_party_names(app, client, admin_client):
 
 
 # --- matching the scan page's classification pipeline ------------------------
-# See routes/records.py's _classify_narrative: SEA-LION first, legacy TF-IDF
-# fallback, same priority order routes/scan.py already used for scanned pages.
+# See routes/records.py's _classify_narrative: SEA-LION zero-shot, no fallback
+# prediction, the same as routes/scan.py does for scanned pages.
 # This is what backs both /records/predict (the new_record form's live
 # preview) and new_record()'s own final classification on save.
 
@@ -160,13 +160,28 @@ def test_classify_narrative_prefers_sealion_when_available(monkeypatch):
     assert result["source"] == "sealion"
 
 
-def test_classify_narrative_falls_back_to_tfidf_when_sealion_off(monkeypatch, app):
+def test_classify_narrative_leaves_type_blank_when_sealion_off(monkeypatch, app):
     monkeypatch.setattr(sealion_classify, "available", lambda: False)
     with app.app_context():
-        result = records_route._classify_narrative("")
-    # No SEA-LION, empty text -> nothing for the fallback classifier either.
+        result = records_route._classify_narrative("Ninakaw ang manok ni [PERSON_1].")
+    # No SEA-LION -> no prediction at all (no TF-IDF fallback); the encoder
+    # classifies and the status says why the type is blank.
     assert result["incident_type"] is None
+    assert result["confidence"] is None
+    assert result["category_group"] is None
     assert result["source"] == "none"
+    assert result["status"] == "off (set BANTAY_OLLAMA=1)"
+
+
+def test_save_without_a_confirmed_type_goes_to_review(app, client, monkeypatch):
+    """A scan draft posts review_status=accepted; with SEA-LION off and the
+    type left blank that must not land as accepted."""
+    monkeypatch.setattr(sealion_classify, "available", lambda: False)
+    client.post("/records/new", data=dict(DRAFT, incident_type_primary="", model_confidence=""))
+    with app.app_context():
+        record = IncidentRecord.query.one()
+        assert record.incident_type_primary is None
+        assert record.review_status == "needs_review"
 
 
 def test_predict_endpoint_returns_pnp_and_kp_screening(client, monkeypatch):
@@ -304,3 +319,23 @@ def test_predict_ignores_a_model_that_is_not_on_the_evaluated_list(client, monke
                 json={"narrative": "NAGNAKAW NG MANOK SA KATABING BAHAY.",
                       "model": "attacker/whatever:latest"})
     assert seen[0] == sealion_classify._DEFAULT_MODEL
+
+
+def test_admin_sends_record_to_review_queue_and_it_stays(app, client, admin_client):
+    """Only admins can push a record into the queue, and the startup /
+    Check Review sweep must not quietly clear that hand-made flag."""
+    with app.app_context():
+        record = IncidentRecord(narrative="Nagsadya si Juan.", review_status="accepted",
+                                model_confidence=0.99, readability="readable")
+        db.session.add(record)
+        db.session.commit()
+        rid = record.id
+
+    client.post(f"/records/{rid}/send-to-review")
+    with app.app_context():
+        assert db.session.get(IncidentRecord, rid).review_status == "accepted"
+
+    assert admin_client.post(f"/records/{rid}/send-to-review").status_code == 302
+    admin_client.post("/records/check-review")
+    with app.app_context():
+        assert db.session.get(IncidentRecord, rid).review_status == "needs_review"

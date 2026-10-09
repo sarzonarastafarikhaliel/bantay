@@ -15,6 +15,7 @@ data/stage/
 data/ocr_calibration*.csv
 data/gold_worksheet*.csv
 data/gold_split.csv
+models/preds_*.csv
 
 # local tooling / misc
 .claude/

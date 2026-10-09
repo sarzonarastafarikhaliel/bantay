@@ -28,9 +28,11 @@ CATEGORY_NAMES = [name for name, _ in CANONICAL_CATEGORIES]
 
 
 def _classify_narrative(text, date="", time="", location_purok="", model=None):
-    """SEA-LION first, legacy TF-IDF fallback - the same priority order as the
-    scan intake pipeline (routes/scan.py step 4), so a manually-typed record
-    gets the same classifier a scanned one does. Shared by predict() (the
+    """SEA-LION zero-shot classification, the same as the scan intake pipeline
+    (routes/scan.py step 4), so a manually-typed record gets the same
+    classifier a scanned one does. No fallback prediction: when SEA-LION is
+    off, times out or gives no usable answer, the incident type is left blank
+    for the encoder and ["status"] says why. Shared by predict() (the
     new_record form's live preview) and new_record()'s final save, so the two
     never disagree on how a label was chosen.
     """
@@ -49,15 +51,8 @@ def _classify_narrative(text, date="", time="", location_purok="", model=None):
                 "reason": sealion_pred.get("reason", ""), "status": sealion_pred.get("status", ""),
                 "model": model}
 
-    label, conf_value = None, None
-    if text:
-        confidences = current_app.classifier.classify(
-            text, date=date, time=time, location_purok=location_purok)
-        label = max(confidences, key=confidences.get) if confidences else None
-        conf_value = confidences.get(label) if label else None
-    return {"incident_type": label, "confidence": conf_value,
-            "category_group": get_category_group(label) if label else None,
-            "source": "tf-idf" if label else "none", "reason": "",
+    return {"incident_type": None, "confidence": None, "category_group": None,
+            "source": "none", "reason": "",
             "status": sealion_pred.get("status", ""), "model": model}
 
 
@@ -208,9 +203,10 @@ def sync_review_queue():
     """Re-evaluate every unresolved record against the current confidence
     threshold and readability rules, flagging anything that now qualifies
     as needs_review so it shows up in the Review Queue (which is just a
-    filtered view over this same field). Records already resolved by a
-    human (review_status == "corrected") are left alone - this is a triage
-    sweep, not a way to re-open a decision already made in the queue.
+    filtered view over this same field). Only "accepted" records are
+    touched: "corrected" is a decision already made in the queue, and an
+    existing needs_review is never cleared here - it may have been sent to
+    the queue by hand (send_to_review), and only a reviewer resolves it.
 
     Runs once at app startup (a scan or import may have written rows under
     an older CONFIDENCE_THRESHOLD) and again on demand from the All
@@ -218,15 +214,13 @@ def sync_review_queue():
     """
     threshold = current_app.config["CONFIDENCE_THRESHOLD"]
     flagged = 0
-    for record in IncidentRecord.query.filter(IncidentRecord.review_status != "corrected"):
-        needs_review = (
+    for record in IncidentRecord.query.filter(IncidentRecord.review_status == "accepted"):
+        if (
             record.readability in ("unreadable", "partial")
             or not (record.narrative or "").strip()
             or (record.model_confidence is not None and record.model_confidence < threshold)
-        )
-        new_status = "needs_review" if needs_review else "accepted"
-        if new_status != record.review_status:
-            record.review_status = new_status
+        ):
+            record.review_status = "needs_review"
             flagged += 1
     if flagged:
         db.session.commit()
@@ -431,7 +425,7 @@ def _render_new_record(result=None):
         gemini_on=gemini.available(), sealion_on=sealion_classify.available(),
         models=sealion_classify.EVALUATED_MODELS,
         active_model=sealion_classify.resolve_model(None),
-        category_groups=CATEGORY_GROUP_NAMES, pnp_tiers=PNP_TIERS, kp_statuses=KP_STATUSES,
+        category_groups=CATEGORY_GROUP_NAMES, kp_statuses=KP_STATUSES,
     )
 
 
@@ -514,9 +508,9 @@ def new_record():
             return redirect(url_for("records.view_record", record_id=replay.id))
 
         threshold = current_app.config["CONFIDENCE_THRESHOLD"]
-        # SEA-LION first, legacy TF-IDF fallback - same priority as the scan
-        # intake pipeline, so a manually-entered record is classified the same
-        # way a scanned one is (see _classify_narrative and routes/scan.py step 4).
+        # SEA-LION zero-shot, no fallback - same as the scan intake pipeline,
+        # so a manually-entered record is classified the same way a scanned
+        # one is (see _classify_narrative and routes/scan.py step 4).
         clf = _classify_narrative(to_classify, date=date, time=time, location_purok=location_purok)
         primary = clf["incident_type"]
         secondary = request.form.get("incident_type_secondary") or None
@@ -561,15 +555,17 @@ def new_record():
             # Prefer what the scan already computed. The scan ran SEA-LION and a
             # six-reason gate (OCR confidence, axis disagreement, a rejected
             # LLM repair, unfilled template slots, reader disagreement) that this
-            # route cannot see and the TF-IDF classifier below cannot reproduce.
+            # route cannot see and cannot reproduce.
             # Recomputing here
             # would quietly downgrade a flagged page to "accepted". Falls back
             # to the local decision for the plain /records/new form, which posts
             # neither field.
             model_confidence=posted_conf if posted_conf is not None else clf["confidence"],
-            review_status=request.form.get("review_status") or decide_review_status(
+            # No confirmed incident type (SEA-LION off and the encoder left it
+            # blank) always goes to the Review Queue, whatever the form posted.
+            review_status=(request.form.get("review_status") or decide_review_status(
                 clf["confidence"] or 0.0, threshold
-            ),
+            )) if primary else "needs_review",
             source_file_page=request.form.get("source_file_page") or None,
             encoded_by=request.form.get("encoded_by") or None,
             remarks=request.form.get("remarks"),
@@ -646,13 +642,13 @@ def edit_record(record_id):
     return render_template("records_new.html", categories=CATEGORY_NAMES, record=record,
                            models=sealion_classify.EVALUATED_MODELS,
                            active_model=sealion_classify.resolve_model(None),
-                           category_groups=CATEGORY_GROUP_NAMES, pnp_tiers=PNP_TIERS, kp_statuses=KP_STATUSES)
+                           category_groups=CATEGORY_GROUP_NAMES, kp_statuses=KP_STATUSES)
 
 
 @records_bp.route("/predict", methods=["POST"])
 @login_required
 def predict():
-    """AJAX endpoint: live SEA-LION (or TF-IDF fallback) preview for the
+    """AJAX endpoint: live SEA-LION preview (blank type when it is off) for the
     new_record form, plus the same PNP/KP/category-group screening the scan
     intake path shows (routes/scan.py step 4) - so typing a narrative here
     surfaces the same decision-support signals uploading a page would.
@@ -684,7 +680,19 @@ def predict():
         "source": clf["source"],
         "reason": clf["reason"],
         "model": clf.get("model"),
+        "status": clf["status"],
     })
+
+
+@records_bp.route("/<int:record_id>/send-to-review", methods=["POST"])
+@login_required
+@role_required("admin")
+def send_to_review(record_id):
+    record = IncidentRecord.query.get_or_404(record_id)
+    record.review_status = "needs_review"
+    db.session.commit()
+    flash(f"Record #{record.id} sent to the Review Queue.")
+    return redirect(url_for("records.view_record", record_id=record.id))
 
 
 @records_bp.route("/delete-all", methods=["POST"])

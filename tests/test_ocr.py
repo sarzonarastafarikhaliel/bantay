@@ -66,8 +66,21 @@ def test_corrector_bar_rejects_a_weak_lexical_match():
     """
     # NAG5ADYA vs NAGSADYA: similarity 0.875, over the 0.86 bar - this lands.
     assert OCRCorrector(lexicon=LEXICON).correct("NAG5ADYA")["text"] == "NAGSADYA"
-    # NAGSADY4X vs NAGSADYA: similarity 0.824, under the bar - left alone.
+    # NAGSADY4X vs NAGSADYA: similarity 0.778, under the bar - left alone.
     assert OCRCorrector(lexicon=LEXICON).correct("NAGSADY4X")["n_edits"] == 0
+
+
+def test_corrector_fixes_misread_glyphs_not_inflections():
+    """Regression from the real Vision pages (tools/eval_corrector.py): difflib's
+    ratio scored a gained or lost affix as a near match, so correctly read
+    Tagalog words missing from the lexicon were rewritten into another form."""
+    lexicon = build_lexicon(["PUROK PUNO SAGUTAN IYON NAKAKITA PANINILIP"] * 2)
+    fix = lambda text: OCRCorrector(lexicon=lexicon).correct(text)["text"]
+    assert fix("PUNOK") == "PUROK"          # R read as N: a glyph, not a lost K
+    assert fix("KASAGUTAN") == "KASAGUTAN"  # KA- prefix: a different word
+    assert fix("IYONG") == "IYONG"          # -NG linker: ditto
+    assert fix("MAKAKITA") == "MAKAKITA"    # will see -> saw is never swapped
+    assert fix("PANINlLIP") == "PANINILIP"  # stray lowercase glyph keeps the caps
 
 
 def test_guess_fields_parses_both_date_styles_and_rejects_nonsense():

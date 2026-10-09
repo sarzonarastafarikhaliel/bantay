@@ -230,7 +230,7 @@ def get_pnp_classification(category):
 #   "Excluded"    - outside Lupon authority; the note says why.
 #
 # The system reports the applicable rule. It does not decide the case -
-# certification to file action remains the Lupon Chairman's call.
+# certification to file action is issued by the Lupon/Pangkat secretary and attested by the chairman (RA 7160 Sec. 412).
 # ---------------------------------------------------------------------------
 _KP_CEILING = "penalty ceiling: imprisonment > 1 yr or fine > P5,000 (RA 7160 Sec. 408[c])"
 

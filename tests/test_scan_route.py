@@ -67,10 +67,14 @@ def test_new_record_scan_upload_surfaces_field_disagreement_and_prefers_regex_st
     # PREFER_FALLBACK: the regex reading must win the status field, not Gemini's.
     assert "For Hearing" in body
     # With SEA-LION off, the page must SAY so rather than silently presenting
-    # the TF-IDF fallback's answer as the pipeline's - a misconfigured Ollama used to be
+    # a fallback answer as the pipeline's - a misconfigured Ollama used to be
     # indistinguishable from a working one. See routes/scan.py step 4.
     assert "off (set BANTAY_OLLAMA=1)" in body
     assert "SEA-LION did not answer" in body
+    # No fallback prediction: the type is left blank for the encoder.
+    assert "No suggestion - classifier off (set BANTAY_OLLAMA=1)" in body
+    assert "none (encoder classifies)" in body
+    assert "TF-IDF" not in body
     # The encoder is reading this draft right now, so a scan never queues itself
     # for a second review - the warnings above the Save button ARE the review.
     # See routes/scan.py step 5.
@@ -103,7 +107,7 @@ def test_new_record_scan_upload_surfaces_field_disagreement_and_prefers_regex_st
 
 
 def test_new_record_scan_upload_uses_sealion_classification_as_primary(app, monkeypatch):
-    """The local SEA-LION few-shot classify() is primary when available (its
+    """The local SEA-LION zero-shot classify() is primary when available (its
     Gemini-backed predecessor measured 69.0% vs the removed encoder's 6.7% real-test
     accuracy - see tools/eval_gemini_classify.py). This exercises that branch
     specifically, since the other test forces sealion_classify off to avoid
@@ -135,16 +139,18 @@ def test_new_record_scan_upload_uses_sealion_classification_as_primary(app, monk
 
     assert resp.status_code == 200
     body = resp.data.decode("utf-8")
-    assert "sealion few-shot" in body
+    assert "sealion zero-shot" in body
     assert "Theft" in body
     # The classification reason must be shown, labelled, next to the
     # suggested type - not just carried in the response and dropped.
     assert "Reason: manok stolen" in body
-    # Both percentages the encoder needs at a glance: how well the page was
-    # read, and how confident the classifier is in the suggested type.
-    # confidence_label "high" maps to 0.8 (see routes/scan.py step 4).
+    # What the encoder needs at a glance: how well the page was read (a real
+    # OCR percentage), and whether the models agree on the suggested type.
+    # confidence_label "high" maps to 0.8 (see routes/scan.py step 4), shown
+    # as a category, not a percentage.
     assert "Readability" in body and "90%" in body
-    assert "Classification Confidence Score" in body and "80%" in body
+    assert "Classification Model Check" in body and "Models agree" in body
+    assert "80%" not in body
     # Repair edits are never shown, whichever repair engine ran.
     assert "What Gemini changed" not in body
 

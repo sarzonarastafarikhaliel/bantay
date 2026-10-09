@@ -35,6 +35,11 @@
     </a>
     {% endif %}
     {% if current_user.role == 'admin' %}
+    {% if record.review_status != 'needs_review' %}
+    <form method="post" action="{{ url_for('records.send_to_review', record_id=record.id) }}">
+      <button class="btn btn--ghost" type="submit">Send to Review Queue</button>
+    </form>
+    {% endif %}
     <form method="post" action="{{ url_for('records.delete_record', record_id=record.id) }}" onsubmit="return confirm('Permanently delete this record?');">
       <button class="btn btn--danger" type="submit">Delete</button>
     </form>
@@ -115,25 +120,24 @@
         </div>
         <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-top: 4px;">{{ kp_note }}</div>
         <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-top: 4px; font-style: italic;">
-          Screening reference only. Certification to file action remains the Lupon Chairman's determination.
+          Screening reference only. Under RA 7160 Sec. 412, the certification to file action is issued by the Lupon or Pangkat secretary and attested by the Lupon or Pangkat chairman; this tag does not replace it.
         </div>
       </div>
 
       <div>
         <div style="font-size: var(--font-size-xs); color: var(--clr-muted); margin-bottom: 4px;">Model Confidence</div>
         {% if record.model_confidence is not none %}
-          {% set pct = (record.model_confidence * 100)|int %}
           <div class="flex items-center gap-2">
             <div style="flex-grow: 1; height: 6px; background: var(--clr-bg); border-radius: 999px; overflow: hidden;">
               {% if record.model_confidence >= 0.6 %}
-                <div style="height: 100%; width: {{ pct }}%; background: var(--clr-success);"></div>
-              {% elif record.model_confidence >= 0.3 %}
-                <div style="height: 100%; width: {{ pct }}%; background: var(--clr-warning);"></div>
+                <div style="height: 100%; width: 100%; background: var(--clr-success);"></div>
+              {% elif record.model_confidence >= 0.4 %}
+                <div style="height: 100%; width: 100%; background: var(--clr-warning);"></div>
               {% else %}
-                <div style="height: 100%; width: {{ pct }}%; background: var(--clr-danger);"></div>
+                <div style="height: 100%; width: 100%; background: var(--clr-danger);"></div>
               {% endif %}
             </div>
-            <span style="font-size: var(--font-size-xs); font-variant-numeric: tabular-nums;">{{ pct }}%</span>
+            <span style="font-size: var(--font-size-xs);">{{ record.model_confidence|confidence_label }}</span>
           </div>
         {% else %}
           <div style="font-size: var(--font-size-sm);">—</div>

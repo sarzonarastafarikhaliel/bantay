@@ -22,7 +22,7 @@ from . import narrative as narrative_tpl
 _TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "Template"
 _LOGOS = (_TEMPLATE_DIR / "logo_barangay.png", _TEMPLATE_DIR / "logo_city.png")
 
-PROVINCE, CITY, BARANGAY = "Bulacan", "Angeles", "Anunas"
+PROVINCE, CITY, BARANGAY = "Pampanga", "Angeles", "Anunas"
 _BLANK_LINE = "_" * 22
 
 

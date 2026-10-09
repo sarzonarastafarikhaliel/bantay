@@ -119,15 +119,14 @@
         <td class="td-truncate">{{ (r.narrative|visible_narrative)[:100] }}</td>
         <td class="col-optional">
           {% if r.model_confidence is not none %}
-            {% set pct = (r.model_confidence * 100)|int %}
             {% if r.model_confidence >= 0.6 %}
-              <span class="conf-bar conf-bar--high"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
-            {% elif r.model_confidence >= 0.3 %}
-              <span class="conf-bar conf-bar--mid"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+              <span class="conf-bar conf-bar--high"><span class="conf-bar__fill" style="width:100%"></span></span>
+            {% elif r.model_confidence >= 0.4 %}
+              <span class="conf-bar conf-bar--mid"><span class="conf-bar__fill" style="width:100%"></span></span>
             {% else %}
-              <span class="conf-bar conf-bar--low"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+              <span class="conf-bar conf-bar--low"><span class="conf-bar__fill" style="width:100%"></span></span>
             {% endif %}
-            <span class="text-xs td-muted"> {{ "%.2f"|format(r.model_confidence) }}</span>
+            <span class="text-xs td-muted"> {{ r.model_confidence|confidence_label }}</span>
           {% else %}—{% endif %}
         </td>
         <td>

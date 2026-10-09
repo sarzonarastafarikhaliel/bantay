@@ -5,7 +5,7 @@
 
 <div class="page-header">
   <h1>{{ 'Edit Blotter Record #' ~ record.id if record else 'New Blotter Record' }}</h1>
-  <p>{% if record %}Update the encoded details below.{% else %}Upload a scanned blotter page, or fill in the fields below by hand. Either way, SEA-LION suggests the incident type, PNP tier, and Katarungang Pambarangay referability as you go.{% endif %}</p>
+  <p>{% if record %}Update the encoded details below.{% else %}Upload a scanned blotter page, or fill in the fields below by hand. Either way, SEA-LION suggests the incident type and Katarungang Pambarangay referability as you go.{% endif %}</p>
 </div>
 
 {% if not record %}
@@ -44,9 +44,8 @@
     {% endif %}
     {% if not sealion_on %}
     <p style="color: #b45309; font-size: 0.85rem;">
-      <strong>Classification degraded:</strong> SEA-LION is not reachable, so the incident type comes
-      from the legacy TF-IDF classifier instead - measured 6.7% accuracy vs SEA-LION's few-shot 67.5%,
-      so treat the suggestion as a placeholder and pick the type yourself.</p>
+      <strong>Classification off:</strong> SEA-LION is not reachable, so no incident type will be
+      suggested - pick the type yourself.</p>
     {% endif %}
     <button class="btn btn-primary" type="submit" id="scan-submit-btn" {% if not engines %}disabled{% endif %}>Extract</button>
     <span id="scan-status" style="display: none; color: var(--clr-muted); font-size: 0.85rem; margin-left: var(--space-2);">
@@ -104,22 +103,21 @@
 
     {% if result.prediction.incident_type %}
       {% set clf_caption %}
-        {% if result.prediction.source == 'sealion' %}
-          A coarse self-report from SEA-LION (high / medium / low), mapped to a number -
-          not a calibrated probability. The tick marks the
-          {{ (result.confidence_threshold * 100) | round | int }}% threshold a prediction
-          is judged against.
-        {% else %}
-          From the legacy TF-IDF classifier, reference-grade only - pick the type yourself.
-        {% endif %}
+          Whether a second, independent model agrees with SEA-LION's label -
+          a category, not a probability.
       {% endset %}
-      {{ conf_meter("Classification Confidence Score", result.prediction.confidence,
-                    result.confidence_threshold, clf_caption,
-                    {"high": "confident", "mid": "unsure", "low": "unsure"}) }}
+      {% set c = result.prediction.confidence %}
+      <div class="conf-meter conf-meter--{{ 'high' if c >= 0.6 else ('mid' if c >= 0.4 else 'low') }}">
+        <div class="conf-meter__head">
+          <span class="conf-meter__label">Classification Model Check</span>
+          <span class="conf-meter__value"><span class="conf-meter__state">{{ c|confidence_label }}</span></span>
+        </div>
+        <p class="conf-meter__foot">{{ clf_caption }}</p>
+      </div>
     {% else %}
       <div class="conf-meter">
         <div class="conf-meter__head">
-          <span class="conf-meter__label">Classification Confidence Score</span>
+          <span class="conf-meter__label">Classification Model Check</span>
           <span class="conf-meter__value">no prediction</span>
         </div>
         <p class="conf-meter__foot">No classifier answered - pick the incident type yourself below.</p>
@@ -134,7 +132,7 @@
   <p style="color: {{ 'var(--clr-muted)' if result.prediction.source == 'sealion' else '#b45309' }};">
     Classifier status: <strong>{{ result.classify_status or 'not reported' }}</strong>
     {% if result.prediction.source != 'sealion' %}
-    - SEA-LION did not answer, so this type came from {{ result.model }} (reference-grade only).
+    - SEA-LION did not answer, so no type was suggested. Pick it yourself below.
     {% endif %}
   </p>
 </div>
@@ -397,9 +395,9 @@
            scan step above shows once OCR finishes (routes/scan.py step 4);
            pre-filled server-side here when a scan already ran. -->
       <div class="prediction-preview visible" id="prediction-preview">
-        <div class="stat-label">Incident Type <span id="pred-source" style="font-weight: 400;">{% if result and result.prediction.incident_type %}{{ '(SEA-LION)' if result.prediction.source == 'sealion' else '(fallback: legacy TF-IDF, reference only)' }}{% endif %}</span></div>
+        <div class="stat-label">Incident Type <span id="pred-source" style="font-weight: 400;">{% if result and result.prediction.incident_type %}(SEA-LION){% endif %}</span></div>
         <div class="prediction-label" id="pred-label">{{ result.prediction.incident_type if result and result.prediction.incident_type else '—' }}</div>
-        <div class="prediction-conf" id="pred-conf">{% if result and result.prediction.incident_type %}Confidence Score: {{ (result.prediction.confidence * 100)|round(1) }}%{% endif %}</div>
+        <div class="prediction-conf" id="pred-conf">{% if result and result.prediction.incident_type %}Model check: {{ result.prediction.confidence|confidence_label }}{% elif result %}No suggestion - classifier {{ result.classify_status or 'not reported' }}. Pick the type yourself.{% endif %}</div>
         <p id="pred-reason" style="color: var(--clr-muted); font-size: 0.8rem; margin-top: var(--space-1);">{% if result and result.prediction.reason %}Reason: {{ result.prediction.reason }}{% endif %}</p>
         {# Model picker. Only the five checkpoints Chapter 4 measured are offered,
            with their dev-split accuracy shown, so a different answer can be read
@@ -427,15 +425,6 @@
               <option value="">— use model prediction —</option>
               {% for g in category_groups %}
               <option value="{{ g }}" {{ 'selected' if result and result.prediction.category_group == g }}>{{ g }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="pnp_classification">PNP Classification <span>editable — override if wrong</span></label>
-            <select class="form-control" id="pnp_classification" name="pnp_classification">
-              <option value="">— use model prediction —</option>
-              {% for t in pnp_tiers %}
-              <option value="{{ t }}" {{ 'selected' if result and result.pnp_tier == t }}>{{ t }}</option>
               {% endfor %}
             </select>
           </div>
@@ -504,15 +493,6 @@
             <option value="">— use model prediction —</option>
             {% for g in category_groups %}
             <option value="{{ g }}" {{ 'selected' if record.category_group == g }}>{{ g }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="pnp_classification">PNP Classification <span>editable — override if wrong</span></label>
-          <select class="form-control" id="pnp_classification" name="pnp_classification">
-            <option value="">— use model prediction —</option>
-            {% for t in pnp_tiers %}
-            <option value="{{ t }}" {{ 'selected' if record.pnp_classification == t }}>{{ t }}</option>
             {% endfor %}
           </select>
         </div>
@@ -619,7 +599,7 @@
     .then(function(data) {
       if (!data.label) { preview.classList.remove('visible'); if (onDone) onDone(false); return; }
       predLabel.textContent = data.label;
-      predConf.textContent  = 'Confidence Score: ' + (data.confidence * 100).toFixed(1) + '% — ' + data.review;
+      predConf.textContent  = 'Model check: ' + confidenceLabel(data.confidence) + ' — ' + data.review;
       preview.classList.add('visible');
       if (confidenceEl) confidenceEl.value = data.confidence;
       if (!primarySel.value) {
@@ -684,7 +664,7 @@
     });
     renderNarrative();
 
-    // Live SEA-LION (or TF-IDF fallback) classification + PNP/KP screening -
+    // Live SEA-LION classification (blank when it is off) + KP screening -
     // same priority order and derived fields the scan step above shows, see
     // routes/records.py's predict()/_classify_narrative and routes/scan.py step 4.
     // Only needed for further edits after a scan, or for pure manual entry -
@@ -698,13 +678,12 @@
     var predSource   = document.getElementById('pred-source');
     var predReason   = document.getElementById('pred-reason');
     var predCategory = document.getElementById('category_group');
-    var predPnpTier  = document.getElementById('pnp_classification');
     var predKpStatus = document.getElementById('kp_status');
     var predKpNote   = document.getElementById('pred-kp-note');
     // Selects double as the encoder's override - only overwrite a slot the
     // encoder hasn't already touched (still on "use model prediction").
     function setAuto(sel, value) { if (!sel.dataset.userSet) sel.value = value || ''; }
-    [predCategory, predPnpTier, predKpStatus].forEach(function (sel) {
+    [predCategory, predKpStatus].forEach(function (sel) {
       sel.addEventListener('change', function () { sel.dataset.userSet = '1'; });
     });
     var primarySel   = document.getElementById('incident_type_primary');
@@ -716,7 +695,7 @@
       var text = summaryEl.value.trim();
       if (text.length < 20) {
         predLabel.textContent = '—'; predConf.textContent = ''; predSource.textContent = ''; predReason.textContent = '';
-        setAuto(predCategory, ''); setAuto(predPnpTier, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
+        setAuto(predCategory, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
         return;
       }
       clearTimeout(debounceTimer);
@@ -736,17 +715,16 @@
         .then(function (data) {
           if (!data.label) {
             predLabel.textContent = 'No prediction';
-            predConf.textContent = 'SEA-LION and the fallback classifier both had nothing to offer - pick the type yourself.';
+            predConf.textContent = 'No suggestion - classifier ' + (data.status || 'not reported') + '. Pick the type yourself.';
             predSource.textContent = ''; predReason.textContent = '';
-            setAuto(predCategory, ''); setAuto(predPnpTier, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
+            setAuto(predCategory, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
             return;
           }
           predLabel.textContent = data.label;
-          predConf.textContent = 'Confidence Score: ' + (data.confidence * 100).toFixed(1) + '% — ' + data.review;
-          predSource.textContent = data.source === 'sealion' ? '(' + (data.model || 'SEA-LION') + ')' : '(fallback: legacy TF-IDF, reference only)';
+          predConf.textContent = 'Model check: ' + confidenceLabel(data.confidence) + ' — ' + data.review;
+          predSource.textContent = '(' + (data.model || 'SEA-LION') + ')';
           predReason.textContent = data.reason ? 'Reason: ' + data.reason : '';
           setAuto(predCategory, data.category_group);
-          setAuto(predPnpTier, data.pnp_tier);
           setAuto(predKpStatus, data.kp_status);
           predKpNote.textContent = data.kp_note || '';
           if (!primarySel.value) {

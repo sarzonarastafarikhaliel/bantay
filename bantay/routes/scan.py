@@ -44,10 +44,9 @@ Degradation, because a barangay hall's network is not a datacentre's:
                         the request path: measured 65-107s per real page here
                         against Gemini's 3-11s, and SEA-LION's job in this
                         pipeline is classification.)
-  no SEA-LION        -> the legacy TF-IDF classifier. Measured far worse
-                        (6.7% real-test accuracy vs the few-shot LLM's 76.8%)
-                        and shown for reference only, never as the
-                        authoritative answer.
+  no SEA-LION        -> no prediction. The incident type is left blank and
+                        the encoder classifies manually; the classifier
+                        status says why.
   no Vision          -> whichever OCR engine is installed; the dropdown stays.
 Every one of those is surfaced in the UI. A degraded scan is never a silent one.
 """
@@ -60,7 +59,7 @@ from flask import Blueprint, current_app, redirect, url_for
 from flask_login import login_required
 
 from .. import narrative
-from ..normalize import find_purok_number, get_category_group, get_kp_status, get_pnp_classification
+from ..normalize import find_purok_number, get_kp_status, get_pnp_classification
 from ..ocr.reconcile import disagreements
 from ..ocr.reconcile import fields_only as reconcile_fields
 from ..ocr.reconcile import reconcile
@@ -292,12 +291,12 @@ def run_scan_pipeline(file, backend=None):
     # and only dilutes the narrative the model reads. See narrative.py.
     #
     # SEA-LION (bantay/ml/sealion_classify.py) is THE classifier. Gemini's build
-    # of this same few-shot approach measured via tools/eval_gemini_classify.py
+    # of this same zero-shot approach measured via tools/eval_gemini_classify.py
     # at 76.8% type accuracy (n=151, dev split) against a fine-tuned encoder's
     # 6.7% (real-test, n=15) - a large gap from a model with ZERO fine-tuning on
     # this corpus, because 188 real records cannot usefully train a 35-way head.
-    # The legacy TF-IDF classifier is kept only as an offline degradation path
-    # and is shown as reference, never as the authoritative answer.
+    # There is no fallback classifier: without a SEA-LION answer the type is
+    # left blank for the encoder.
     to_classify = fields["incident_summary"] or corrected_text
     started = time.perf_counter()
 
@@ -323,20 +322,10 @@ def run_scan_pipeline(file, backend=None):
                "category_group": sealion_pred["category_group"], "group_confidence": None,
                "axes_agree": True, "confidence": confidence, "top_k": [],
                "source": "sealion", "reason": sealion_pred.get("reason", "")}
-        fallback_pred = {}
     else:
-        # SEA-LION is off or gave no usable answer. The TF-IDF classifier answers
-        # so the draft is not left empty, and the UI says so - see records_new.html.
-        fallback_pred = {}
-        if to_classify.strip():
-            conf = current_app.classifier.classify(to_classify)
-            label = max(conf, key=conf.get) if conf else None
-            if label:
-                fallback_pred = {"incident_type": label, "type_confidence": conf[label],
-                                 "category_group": get_category_group(label),
-                                 "group_confidence": None, "axes_agree": True,
-                                 "confidence": conf[label], "top_k": []}
-        pred = dict(fallback_pred, source="tf-idf" if fallback_pred else "none")
+        # SEA-LION is off or gave no usable answer: no prediction. The type is
+        # left blank for the encoder and classify_status below says why.
+        pred = {"source": "none"}
     predict_ms = (time.perf_counter() - started) * 1000
 
     # --- 5. Checks the encoder should look at before saving --------------
@@ -383,8 +372,8 @@ def run_scan_pipeline(file, backend=None):
         "classify_status": sealion_pred.get("status", ""),
         "engine": ocr["engine"],
         "mean_conf": ocr["mean_conf"],
-        "model": ("sealion few-shot" if pred.get("source") == "sealion"
-                  else "tf-idf (fallback)"),
+        "model": ("sealion zero-shot" if pred.get("source") == "sealion"
+                  else "none (encoder classifies)"),
         "prediction": pred,
         "pnp_tier": get_pnp_classification(pred["incident_type"])[0] if pred.get("incident_type") else "",
         # KP referability travels with the draft so the encoder sees, at intake,

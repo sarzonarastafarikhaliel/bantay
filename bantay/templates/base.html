@@ -89,6 +89,12 @@
   </div>
 </div>
 <script>
+// Mirrors the confidence_label Jinja filter (bantay/__init__.py): the value is
+// two-model agreement mapped to 0.8/0.5/0.3, not a probability.
+function confidenceLabel(c) {
+  return c >= 0.6 ? 'Models agree' : c >= 0.4 ? 'Unverified (check model unavailable)' : 'Models disagree';
+}
+
 (() => {
   const sidebar = document.getElementById('sidebar');
   const toggle = document.getElementById('sidebarToggle');

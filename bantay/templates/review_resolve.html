@@ -36,16 +36,15 @@
     <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--clr-border);">
       <div class="narrative-panel__label">Model Confidence</div>
       <div class="flex items-center gap-2" style="gap: var(--space-2);">
-        {% set pct = (record.model_confidence * 100)|int %}
         {% if record.model_confidence >= 0.6 %}
-          <span class="conf-bar conf-bar--high" style="width: 120px;"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
-          <span class="badge badge--accepted">{{ "%.0f"|format(record.model_confidence * 100) }}%</span>
-        {% elif record.model_confidence >= 0.3 %}
-          <span class="conf-bar conf-bar--mid" style="width: 120px;"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
-          <span class="badge badge--needs-review">{{ "%.0f"|format(record.model_confidence * 100) }}%</span>
+          <span class="conf-bar conf-bar--high" style="width: 120px;"><span class="conf-bar__fill" style="width:100%"></span></span>
+          <span class="badge badge--accepted">{{ record.model_confidence|confidence_label }}</span>
+        {% elif record.model_confidence >= 0.4 %}
+          <span class="conf-bar conf-bar--mid" style="width: 120px;"><span class="conf-bar__fill" style="width:100%"></span></span>
+          <span class="badge badge--needs-review">{{ record.model_confidence|confidence_label }}</span>
         {% else %}
-          <span class="conf-bar conf-bar--low" style="width: 120px;"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
-          <span class="badge badge--rising">{{ "%.0f"|format(record.model_confidence * 100) }}%</span>
+          <span class="conf-bar conf-bar--low" style="width: 120px;"><span class="conf-bar__fill" style="width:100%"></span></span>
+          <span class="badge badge--rising">{{ record.model_confidence|confidence_label }}</span>
         {% endif %}
       </div>
     </div>
@@ -183,15 +182,15 @@
       .then(function(data) {
         rerunBtn.disabled = false;
         if (!data.label) {
-          rerunStatus.textContent = 'Could not classify - is the classifier reachable?';
+          rerunStatus.textContent = 'No suggestion - classifier ' + (data.status || 'not reported') + '.';
           rerunPreview.classList.remove('visible');
           return;
         }
         lastRerun = data;
         document.getElementById('model_confidence').value = data.confidence;
-        rerunSourceEl.textContent = data.source === 'sealion' ? '(SEA-LION)' : '(fallback: legacy TF-IDF, reference only)';
+        rerunSourceEl.textContent = '(SEA-LION)';
         rerunLabelEl.textContent = data.label;
-        rerunConfEl.textContent  = 'Confidence Score: ' + (data.confidence * 100).toFixed(1) + '% — ' + data.review;
+        rerunConfEl.textContent  = 'Model check: ' + confidenceLabel(data.confidence) + ' — ' + data.review;
         rerunReasonEl.textContent = data.reason ? ('Reason: ' + data.reason) : '';
         rerunPreview.classList.add('visible');
         rerunStatus.textContent = 'Updated just now.';

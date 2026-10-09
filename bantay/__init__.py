@@ -57,6 +57,16 @@ def create_app(config_object="config.Config", overrides=None):
             return text or ""
         return redact_names(text)
 
+    @app.template_filter("confidence_label")
+    def confidence_label(value):
+        """model_confidence is 0.8/0.5/0.3 from whether two models agree
+        (routes/records.py), not a probability - show the category, not a %."""
+        if value >= 0.6:
+            return "Models agree"
+        if value >= 0.4:
+            return "Unverified (check model unavailable)"
+        return "Models disagree"
+
     with app.app_context():
         db.create_all()
         from .routes.records import sync_review_queue

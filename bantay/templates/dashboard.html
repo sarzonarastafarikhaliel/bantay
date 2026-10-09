@@ -70,8 +70,9 @@
 </div>
 <p class="text-sm" style="color: var(--clr-muted); margin-bottom: var(--space-6);">
   Screening reference derived from the incident type. Independent of the PNP crime tier — a crime can still be
-  KP-mediable when its penalty falls within RA 7160 Sec. 408[c]. Certification to file action remains the
-  Lupon Chairman's determination.
+  KP-mediable when its penalty falls within RA 7160 Sec. 408[c]. Under RA 7160 Sec. 412, the
+  certification to file action is issued by the Lupon or Pangkat secretary and attested by the Lupon or Pangkat
+  chairman; this tag does not replace it.
 </p>
 
 <!-- Category Group Breakdown -->
@@ -248,15 +249,14 @@
         </td>
         <td>
           {% if r.model_confidence is not none %}
-            {% set pct = (r.model_confidence * 100)|int %}
             {% if r.model_confidence >= 0.6 %}
-              <span class="conf-bar conf-bar--high"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
-            {% elif r.model_confidence >= 0.3 %}
-              <span class="conf-bar conf-bar--mid"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+              <span class="conf-bar conf-bar--high"><span class="conf-bar__fill" style="width:100%"></span></span>
+            {% elif r.model_confidence >= 0.4 %}
+              <span class="conf-bar conf-bar--mid"><span class="conf-bar__fill" style="width:100%"></span></span>
             {% else %}
-              <span class="conf-bar conf-bar--low"><span class="conf-bar__fill" style="width:{{ pct }}%"></span></span>
+              <span class="conf-bar conf-bar--low"><span class="conf-bar__fill" style="width:100%"></span></span>
             {% endif %}
-            <span class="text-xs td-muted" style="margin-left: 4px;">{{ "%.2f"|format(r.model_confidence) }}</span>
+            <span class="text-xs td-muted" style="margin-left: 4px;">{{ r.model_confidence|confidence_label }}</span>
           {% else %}—{% endif %}
         </td>
       </tr>
