@@ -11,6 +11,10 @@ login_manager.login_view = "auth.login"
 def create_app(config_object="config.Config", overrides=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_object)
+    # Debug only on explicit request. Read here rather than as a Config class
+    # attribute so it is re-read on every create_app, and so FLASK_DEBUG (which
+    # Flask folds into DEBUG by default) cannot switch it on by accident.
+    app.config["DEBUG"] = os.environ.get("BANTAY_DEBUG") == "1"
     if overrides:
         app.config.update(overrides)
     os.makedirs(app.instance_path, exist_ok=True)
