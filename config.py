@@ -58,6 +58,9 @@ class Config:
         "DATABASE_URL", "sqlite:///" + os.path.join(BASE_DIR, "instance", "bantay.db")
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Browsers then withhold the session cookie from cross-site POSTs - partial
+    # CSRF cover for the forms that have no token of their own.
+    SESSION_COOKIE_SAMESITE = "Lax"
     MODEL_DIR = os.path.join(BASE_DIR, "models")
     CONFIDENCE_THRESHOLD = float(os.environ.get("CONFIDENCE_THRESHOLD", 0.6))
     # Phone-camera blotter photos run up to 6.4 MB in the real corpus (55/104
