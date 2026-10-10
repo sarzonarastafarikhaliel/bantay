@@ -9,6 +9,7 @@ from flask_login import login_required, current_user
 from .. import db
 from .. import export_docx
 from .. import narrative as narrative_tpl
+from ..audit import audit
 from ..models import IncidentRecord
 from ..crypto import narrative_digest
 from ..ml import sealion_classify
@@ -300,6 +301,7 @@ def list_records():
 @login_required
 def view_record(record_id):
     record = IncidentRecord.query.get_or_404(record_id)
+    audit("record.view", "record", record.id)
     pnp_tier, legal_basis = get_pnp_classification(record.incident_type_primary)
     category_group = record.category_group or get_category_group(record.incident_type_primary)
     kp_status, kp_note = get_kp_status(record.incident_type_primary)
@@ -326,6 +328,7 @@ def _docx_response(records, filename):
 @login_required
 def export_record_docx(record_id):
     record = IncidentRecord.query.get_or_404(record_id)
+    audit("record.export", "record", record.id)
     return _docx_response([record], f"blotter_{record.id}.docx")
 
 
@@ -337,6 +340,8 @@ def export_records_docx():
     if not records:
         flash("No records match those filters.")
         return redirect(url_for("records.list_records", **request.args))
+    # The filter values are not logged: q is free text and may be a name.
+    audit("record.export_bulk")
     return _docx_response(records, "blotter_records.docx")
 
 
@@ -374,6 +379,7 @@ def import_csv():
         stats = import_csv_rows(rows, batch_number=request.form.get("batch_number"),
                                 encoded_by=request.form.get("encoded_by"),
                                 created_by=current_user.id)
+        audit("record.import")
         message = f"Saved {stats['saved']} blotter record(s)."
         if stats["excluded"]:
             message += f" {stats['excluded']} kept out of ML training (unreadable or marked)."
@@ -573,6 +579,7 @@ def new_record():
         )
         db.session.add(record)
         db.session.commit()
+        audit("record.create", "record", record.id)
         flash("Record saved.")
         return redirect(url_for("records.list_records"))
     return _render_new_record()
@@ -637,6 +644,7 @@ def edit_record(record_id):
                     record.review_status = decide_review_status(new_confidence, threshold)
 
         db.session.commit()
+        audit("record.edit", "record", record.id)
         flash(f"Record #{record.id} updated.")
         return redirect(url_for("records.view_record", record_id=record.id))
     return render_template("records_new.html", categories=CATEGORY_NAMES, record=record,
@@ -691,6 +699,7 @@ def send_to_review(record_id):
     record = IncidentRecord.query.get_or_404(record_id)
     record.review_status = "needs_review"
     db.session.commit()
+    audit("record.send_to_review", "record", record.id)
     flash(f"Record #{record.id} sent to the Review Queue.")
     return redirect(url_for("records.view_record", record_id=record.id))
 
@@ -699,6 +708,7 @@ def send_to_review(record_id):
 @login_required
 def delete_all():
     if current_user.role != "admin":
+        audit(request.endpoint, outcome="denied")
         flash("Only admins can delete all records.")
         return redirect(url_for("records.list_records"))
     # Require explicit confirmation token to prevent CSRF / accidental triggers
@@ -708,6 +718,7 @@ def delete_all():
     count = IncidentRecord.query.count()
     IncidentRecord.query.delete()
     db.session.commit()
+    audit("record.delete_all")
     flash(f"Deleted all {count} records.")
     return redirect(url_for("records.list_records"))
 
@@ -716,6 +727,7 @@ def delete_all():
 @login_required
 def delete_record(record_id):
     if current_user.role != "admin":
+        audit(request.endpoint, "record", record_id, outcome="denied")
         flash("Only admins can delete records.")
         return redirect(url_for("records.list_records"))
     record = db.session.get(IncidentRecord, record_id)
@@ -724,5 +736,6 @@ def delete_record(record_id):
         return redirect(url_for("records.list_records"))
     db.session.delete(record)
     db.session.commit()
+    audit("record.delete", "record", record_id)
     flash(f"Record #{record_id} deleted.")
     return redirect(request.referrer or url_for("records.list_records"))

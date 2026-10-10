@@ -3,6 +3,8 @@ from functools import wraps
 from flask import flash, redirect, request, url_for
 from flask_login import current_user
 
+from .audit import audit
+
 
 def role_required(*roles):
     """Restrict a view to the given roles. Pair with @login_required."""
@@ -10,6 +12,9 @@ def role_required(*roles):
         @wraps(fn)
         def wrapped(*args, **kwargs):
             if current_user.role not in roles:
+                record_id = kwargs.get("record_id")
+                audit(request.endpoint, target_type="record" if record_id else None,
+                      target_id=record_id, outcome="denied")
                 flash("You don't have permission to do that.")
                 return redirect(request.referrer or url_for("dashboard.index"))
             return fn(*args, **kwargs)

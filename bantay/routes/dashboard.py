@@ -16,6 +16,7 @@ from datetime import datetime
 from flask import Blueprint, current_app, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 
+from ..audit import audit
 from ..models import IncidentRecord
 from ..ml import sealion_classify
 from ..ml.registry import MODEL_FILENAME
@@ -185,6 +186,7 @@ def index():
 @login_required
 def reload_model():
     if current_user.role != "admin":
+        audit(request.endpoint, outcome="denied")
         flash("Only admins can reload the model.")
         return redirect(url_for("dashboard.index"))
     loaded = current_app.classifier.reload()

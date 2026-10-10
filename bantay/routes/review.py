@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 
 from .. import db
+from ..audit import audit
 from ..models import IncidentRecord
 from ..normalize import CANONICAL_CATEGORIES, get_category_group, get_kp_status, get_pnp_classification
 from ..rbac import role_required
@@ -65,6 +66,7 @@ def resolve(record_id):
                 record.model_confidence = new_confidence
 
         db.session.commit()
+        audit("record.review", "record", record.id)
         flash("Record reviewed.")
         return redirect(url_for("review.queue"))
 
