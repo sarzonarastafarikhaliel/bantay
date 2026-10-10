@@ -25,3 +25,18 @@ skills-lock.json
 Gemini_Generated_Image_*.jpg
 models/_to_delete/
 Thesis Writing/
+
+# thesis manuscript and reference documents - not part of the prototype
+/*.docx
+/*.pdf
+/Anunas Logo.jpg
+~$*
+
+# editor / OS / local env noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+.env
+graphify-out/
