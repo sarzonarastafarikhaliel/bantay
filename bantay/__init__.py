@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, redirect, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 
@@ -71,8 +71,23 @@ def create_app(config_object="config.Config", overrides=None):
             return "Unverified (check model unavailable)"
         return "Models disagree"
 
+    # Endpoints a flagged account can still reach: the screen that clears the
+    # flag, a way out, and the CSS/images those two pages load.
+    password_change_exempt = {"auth.change_password", "auth.logout", "static"}
+
+    @app.before_request
+    def force_password_change():
+        """While must_change_password is set, every other URL - typed, linked
+        or posted - lands on the change-password screen. A hook rather than a
+        check per view, so a new route cannot forget it."""
+        if (current_user.is_authenticated and current_user.must_change_password
+                and request.endpoint not in password_change_exempt):
+            return redirect(url_for("auth.change_password"))
+
     with app.app_context():
         db.create_all()
+        from .seed import upgrade_schema
+        upgrade_schema()
         from .routes.records import sync_review_queue
         sync_review_queue()
 

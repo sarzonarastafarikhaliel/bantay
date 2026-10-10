@@ -14,12 +14,42 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default="encoder")
+    # Set on seeded accounts and on any account still on the old shared default;
+    # while true, create_app's before_request hook sends every page to the
+    # change-password screen. Existing databases gain the column through
+    # seed.upgrade_schema(), which create_app runs on every start.
+    must_change_password = db.Column(db.Boolean, nullable=False, default=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+class AuditLog(db.Model):
+    """Who did what to which record, and whether it was allowed.
+
+    IDs and action names only - never a narrative, a party name or any other
+    decrypted field. The table sits outside the encryption layer, so anything
+    written here is plaintext in the .db file. username is the account name of
+    the signed-in staff member, never text typed into a form.
+
+    Append-only: no route updates or deletes rows, and seed.upgrade_schema()
+    installs SQLite triggers that abort any UPDATE or DELETE on the table.
+    user_id is deliberately not a foreign key, so an entry outlives its account.
+    """
+    __tablename__ = "audit_log"
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, index=True)  # UTC
+    user_id = db.Column(db.Integer)
+    username = db.Column(db.String(80))
+    role = db.Column(db.String(20))
+    action = db.Column(db.String(60), nullable=False, index=True)
+    target_type = db.Column(db.String(40))
+    target_id = db.Column(db.Integer)
+    outcome = db.Column(db.String(20), nullable=False)   # success / failure / denied
+    ip = db.Column(db.String(45))
 
 
 class IncidentRecord(db.Model):

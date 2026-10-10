@@ -56,9 +56,18 @@
         Review Queue
       </a>
       {% endif %}
+      {% if current_user.role == 'admin' %}
+      <div class="nav-group__label" style="margin-top: 0.75rem;">Admin</div>
+      <a class="nav-link {% if request.endpoint == 'auth.audit_log' %}active{% endif %}"
+         href="{{ url_for('auth.audit_log') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Audit Log
+      </a>
+      {% endif %}
     </nav>
     <div class="sidebar__footer">
       Logged in as <strong>{{ current_user.username }}</strong><br>
+      <a href="{{ url_for('auth.change_password') }}" style="color: var(--clr-muted);">Change password</a> &middot;
       <a href="{{ url_for('auth.logout') }}" style="color: var(--clr-muted);">Sign out</a>
     </div>
   </aside>
