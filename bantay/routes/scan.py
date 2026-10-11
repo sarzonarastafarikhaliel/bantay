@@ -312,8 +312,8 @@ def run_scan_pipeline(file, backend=None):
         # agrees with the primary, the same validated-agreement trick
         # ocr/reconcile.py already uses between the regex and Gemini field
         # readers - see classify_with_agreement's docstring for the measured
-        # split (85.2% accurate when they agree vs 47.1% when they don't,
-        # n=151 dev split) that replaced the old self-reported-confidence
+        # split (84.7% accurate when they agree vs 45.5% when they don't,
+        # n=188 gold records) that replaced the old self-reported-confidence
         # mapping. "high" is the only tier that clears the default 0.6
         # threshold; "medium" and "low" both raise a check-this warning.
         confidence = {"high": 0.8, "medium": 0.5, "low": 0.3}.get(

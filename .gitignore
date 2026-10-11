@@ -40,3 +40,8 @@ Thumbs.db
 *.log
 .env
 graphify-out/
+
+# notes / write-ups - only README ships with the prototype
+*.md
+!README.md
+skills/

@@ -17,12 +17,13 @@ the module name. The original hypothesis here was the opposite of that choice:
 a model tuned for Tagalog/Cebuano (aisingapore/Gemma-SEA-LION-v3-9B-IT,
 q4_k_m) should read Taglish barangay narratives better than a general-purpose
 model. Measuring both against the same 151-record dev split falsified that
-hypothesis for this task - gemma4:e4b reached 67.5% type accuracy versus
-SEA-LION v3-9B-IT's 55.6% (also the best-performing SEA-LION checkpoint on
-this dataset), and versus every other SEA-LION checkpoint tried
-(llama-sea-lion-v3.5-8b-r: 51.7%; Gemma-SEA-LION-v4-4B-VL: 47.0%;
-Gemma-SEA-LION-v4.5-E2B-IT: 41.7%) (models/metrics_preds_*.csv, scored via
-tools/eval_classifier_metrics.py + tools/score_classifier_metrics.py). Kept
+hypothesis for this task - on all 188 gold records gemma4:e4b reached 68.6%
+type accuracy versus SEA-LION v3-9B-IT's 60.6% (the best-performing SEA-LION
+checkpoint, and statistically inseparable from gemma4:e4b: exact McNemar
+p = 0.058), and versus every other SEA-LION checkpoint tried
+(llama-sea-lion-v3.5-8b-r: 54.3%; Gemma-SEA-LION-v4-4B-VL: 47.3%;
+Gemma-SEA-LION-v4.5-E2B-IT: 43.1%) (models/metrics_preds_*.csv, scored via
+tools/pool_188.py + tools/score_pooled_188.py). Kept
 the module name on the smallest-diff principle - it is still the module that
 owns few-shot incident classification, just no longer via a SEA-LION
 checkpoint.
@@ -55,8 +56,8 @@ TYPE_NAMES = [name for name, _ in CANONICAL_CATEGORIES if name not in _LEGACY_ON
 _DEFAULT_MODEL = "gemma4:e4b"
 _DEFAULT_HOST = "http://localhost:11434"
 
-# The five checkpoints the study actually measured, with their dev-split scores
-# (n=151; see tools/eval_classifier_metrics.py and models/metrics_preds_*.csv).
+# The five checkpoints the study actually measured, with their accuracy on all
+# 188 gold records (tools/pool_188.py, results/pooled_188/pooled_stats.json).
 # The UI offers exactly these and classify() accepts nothing else: a free-text
 # model field would post an arbitrary string to Ollama and, worse, would let a
 # record be classified by something with no accuracy figure behind it. Tags are
@@ -64,15 +65,15 @@ _DEFAULT_HOST = "http://localhost:11434"
 # Listed in descending type_acc order, which the UI dropdown preserves.
 EVALUATED_MODELS = [
     {"tag": "gemma4:e4b", "label": "Gemma 4 (deployed)",
-     "type_acc": 0.675, "group_acc": 0.841},
+     "type_acc": 0.686, "group_acc": 0.840},
     {"tag": "aisingapore/Gemma-SEA-LION-v3-9B-IT:q4_k_m", "label": "Gemma SEA-LION v3 9B-IT (q4_k_m)",
-     "type_acc": 0.556, "group_acc": 0.762},
+     "type_acc": 0.606, "group_acc": 0.782},
     {"tag": "aisingapore/llama-sea-lion-v3.5-8b-r", "label": "Llama SEA-LION v3.5 8B-R",
-     "type_acc": 0.517, "group_acc": 0.735},
+     "type_acc": 0.543, "group_acc": 0.750},
     {"tag": "aisingapore/Gemma-SEA-LION-v4-4B-VL", "label": "Gemma SEA-LION v4 4B-VL",
-     "type_acc": 0.470, "group_acc": 0.656},
+     "type_acc": 0.473, "group_acc": 0.676},
     {"tag": "aisingapore/Gemma-SEA-LION-v4.5-E2B-IT", "label": "Gemma SEA-LION v4.5 E2B-IT",
-     "type_acc": 0.417, "group_acc": 0.656},
+     "type_acc": 0.431, "group_acc": 0.665},
 ]
 _ALLOWED_TAGS = {m["tag"] for m in EVALUATED_MODELS}
 
@@ -243,15 +244,15 @@ def classify(narrative, model=None, host=None, timeout=DEFAULT_TIMEOUT):
 # signal, the same trick ocr/reconcile.py already uses between the regex and
 # Gemini field readers (see that module's docstring). The primary model's own
 # self-reported "confidence" field is not validated: Chapter 4, §4.3.2
-# measured Gemma 4's stated certainty saturated at ~100% on every one of 151
-# dev-split records, including the 49 it got wrong - a signal with no spread
+# measured Gemma 4's stated certainty saturated at ~100% on every one of the
+# 188 gold records, including the 59 it got wrong - a signal with no spread
 # cannot separate anything. Picked v3-9B-IT as the check partner because it
-# gave the widest measured split against Gemma 4 specifically on that same
-# dev split: 85.2% accurate when the two agree (n=81) vs 47.1% when they
-# disagree (n=70) - a 38-point gap, against ~40-point-or-less gaps for the
-# other three candidates. A group-level "same Category Group but different
-# type" middle tier was also measured and rejected: its accuracy (48.5%,
-# n=33) does not separate from outright disagreement (45.9%, n=37), so a
+# gives the widest measured split against Gemma 4: 84.7% accurate when the
+# two agree (n=111) vs 45.5% when they disagree (n=77) - a 39-point gap,
+# against 27-point-or-less gaps for the other three candidates. A
+# group-level "same Category Group but different type" middle tier was also
+# measured and rejected: its accuracy (46.2%, n=39) does not separate from
+# outright disagreement (44.7%, n=38), so a
 # 3-way high/medium/low split would be manufactured granularity the data
 # does not support - this is a 2-way signal (agree/disagree) by design.
 CHECK_MODEL = "aisingapore/Gemma-SEA-LION-v3-9B-IT:q4_k_m"

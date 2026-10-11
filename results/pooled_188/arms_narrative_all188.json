@@ -1,0 +1,28 @@
+{
+  "pages": 188,
+  "vision": {
+    "gold_words": 9998,
+    "exact": 0.35047009401880375,
+    "garbled": 0.17623524704940988,
+    "absent": 0.47329465893178635
+  },
+  "text": {
+    "gold_words": 9998,
+    "exact": 0.4662932586517303,
+    "garbled": 0.08671734346869374,
+    "absent": 0.4469893978795759
+  },
+  "image": {
+    "gold_words": 9998,
+    "exact": 0.4976995399079816,
+    "garbled": 0.07311462292458491,
+    "absent": 0.42918583716743347
+  },
+  "image_trace": {
+    "total": 13159,
+    "in_gold": 6011,
+    "in_vision": 6213,
+    "neither": 935
+  },
+  "vision_words_per_page": 124.0
+}

@@ -55,6 +55,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default="dev", choices=["dev", "holdout", "all"])
     ap.add_argument("--limit", type=int, help="only the first N pages (smoke test)")
+    ap.add_argument("--out", default="models/preds_gemini_classify.csv",
+                    help="predictions CSV, relative to the repo root")
     args = ap.parse_args()
 
     from bantay.ml.gemini_classify import available, classify
@@ -87,7 +89,7 @@ def main():
               f"gold={preds[-1]['gold_type']!s:<30} pred={out['incident_type']!s:<30} {out['status'][:40]}")
 
     preds_df = pd.DataFrame(preds)
-    out_path = ROOT / "models/preds_gemini_classify.csv"
+    out_path = ROOT / args.out
     preds_df.to_csv(out_path, index=False, encoding="utf-8")
     print(f"\n[write] {out_path}")
 
