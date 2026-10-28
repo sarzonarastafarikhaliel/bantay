@@ -278,6 +278,13 @@ def test_new_record_page_offers_the_evaluated_models(client):
         assert entry["tag"] in html
 
 
+def test_new_record_page_offers_rerun_classifier(client):
+    """Without the button, a scan whose SEA-LION call timed out has no way to
+    be classified again short of editing the Salaysay."""
+    html = client.get("/records/new").get_data(as_text=True)
+    assert 'id="rerun-predict-btn"' in html
+
+
 def test_predict_honours_the_selected_model(client, monkeypatch):
     """A chosen checkpoint must reach classify() as the primary call and be
     reported back, so the encoder can tell which model produced the
