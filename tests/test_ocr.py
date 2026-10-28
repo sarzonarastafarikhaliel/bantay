@@ -202,6 +202,40 @@ def test_gvision_rebuilds_lines_from_break_hints(monkeypatch):
     assert lines[1]["conf"] == pytest.approx(0.60)
 
 
+def _boxed(text, x0, y0, x1, y1, brk=0):
+    word = _word(text, 0.9, brk)
+    word.bounding_box = NS(vertices=[NS(x=x0, y=y0), NS(x=x1, y=y0),
+                                     NS(x=x1, y=y1), NS(x=x0, y=y1)])
+    return word
+
+
+def test_gvision_rebuilds_reading_order_across_blocks(monkeypatch):
+    """Vision splits one handwritten line into several blocks and returns them
+    out of order, which turned the Salaysay into a column of one-word lines with
+    the name on the blank somewhere else. Geometry has to put the line back
+    together, including on a slightly tilted photo (the right end sits lower)."""
+    def block(*words):
+        return NS(paragraphs=[NS(words=list(words))])
+
+    blocks = [block(_boxed("GUSTO", 0, 200, 90, 240, BREAKS.SPACE), _boxed("KO", 95, 200, 130, 240)),
+              block(_boxed("tungkol", 300, 112, 380, 152, BREAKS.SPACE), _boxed("sa", 385, 114, 420, 154)),
+              block(_boxed("Ako", 0, 100, 40, 140, BREAKS.SPACE), _boxed("si", 45, 100, 70, 140)),
+              block(_boxed("JUAN", 120, 105, 280, 145))]
+    resp = NS(error=NS(message=""), full_text_annotation=NS(pages=[NS(blocks=blocks)]))
+
+    engine = _stub_google(monkeypatch, resp=resp)
+    lines = engine._gvision(b"", ("tl", "en"), gpu=False)
+    assert [l["text"] for l in lines] == ["Ako si JUAN tungkol sa", "GUSTO KO"]
+
+
+def test_unwrap_lines_joins_hand_wrapped_salaysay():
+    from bantay.routes.scan import unwrap_lines
+
+    text = "Ako si\nJUAN tungkol sa NAG-\nREPORT ng\npag babanta.\n\nIkalawang talata\nito."
+    assert unwrap_lines(text) == ("Ako si JUAN tungkol sa NAG-REPORT ng pag babanta."
+                                  "\n\nIkalawang talata ito.")
+
+
 def test_gvision_quota_raises_quota_exceeded_not_bare_runtime_error(monkeypatch):
     """A bulk run must be able to tell 'this page failed' from 'the quota is
     gone', or it skips every remaining page and writes a truncated file.
