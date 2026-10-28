@@ -277,15 +277,15 @@ def _gvision(data, langs, gpu):
         raise RuntimeError(f"Google Vision: {resp.error.message}")
 
     brk = vision.TextAnnotation.DetectedBreak.BreakType
-    lines, buf, confs = [], [], []
+    segs, buf, confs, boxes = [], [], [], []
 
     def flush():
         text = "".join(buf).strip()
         if text:
-            lines.append({"text": text,
-                          "conf": round(sum(confs) / len(confs), 4) if confs else 0.0})
+            segs.append({"text": text, "confs": list(confs), "box": _union(boxes)})
         buf.clear()
         confs.clear()
+        boxes.clear()
 
     for page in resp.full_text_annotation.pages:
         for block in page.blocks:
@@ -293,13 +293,73 @@ def _gvision(data, langs, gpu):
                 for word in para.words:
                     buf.append("".join(sym.text for sym in word.symbols))
                     confs.append(float(word.confidence))
+                    boxes.append(getattr(word, "bounding_box", None))
                     tail = word.symbols[-1].property.detected_break.type_
                     if tail in (brk.LINE_BREAK, brk.EOL_SURE_SPACE):
                         flush()
                     elif tail in (brk.SPACE, brk.SURE_SPACE):
                         buf.append(" ")
                 flush()
+
+    lines = []
+    for row in _reading_order(segs):
+        confs = [c for s in row for c in s["confs"]]
+        lines.append({"text": " ".join(s["text"] for s in row),
+                      "conf": round(sum(confs) / len(confs), 4) if confs else 0.0})
     return lines
+
+
+def _union(boxes):
+    """(left, top, right, bottom) around Vision word boxes, or None when any
+    word came back without geometry."""
+    pts = []
+    for b in boxes:
+        vs = getattr(b, "vertices", None)
+        if not vs:
+            return None
+        pts += [(v.x, v.y) for v in vs]
+    if not pts:
+        return None
+    xs, ys = zip(*pts)
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _reading_order(segs):
+    """Put Vision's line segments back into reading order, one row per written
+    line.
+
+    Vision groups handwriting into blocks and returns them block by block. On a
+    ruled blotter page it often makes a block of a few words, so one written
+    line comes back as scattered fragments: "Ako si" in one block, the name on
+    the blank in another, "tungkol sa" in a third. Read in block order, the
+    Salaysay turns into a column of one- and two-word lines with the names
+    elsewhere on the page.
+
+    So segments are regrouped by geometry instead. Walking left to right, a
+    segment joins the row whose rightmost segment overlaps it vertically by
+    more than half the smaller height. Comparing with the nearest neighbour, not
+    a row-wide average, keeps a slightly tilted phone photo from splitting one
+    line into two. Rows are then read top to bottom.
+
+    Without geometry (any segment missing a box) Vision's own order is kept, one
+    segment per row.
+    """
+    if not segs or any(s["box"] is None for s in segs):
+        return [[s] for s in segs]
+    rows = []
+    for s in sorted(segs, key=lambda s: s["box"][0]):
+        _, top, _, bottom = s["box"]
+        best, best_overlap = None, 0.0
+        for row in rows:
+            _, rtop, _, rbottom = row[-1]["box"]
+            overlap = min(bottom, rbottom) - max(top, rtop)
+            if overlap > 0.5 * min(bottom - top, rbottom - rtop) and overlap > best_overlap:
+                best, best_overlap = row, overlap
+        if best is None:
+            rows.append([s])
+        else:
+            best.append(s)
+    return sorted(rows, key=lambda r: sum(s["box"][1] + s["box"][3] for s in r) / len(r))
 
 
 _BACKENDS = {"easyocr": _easyocr, "trocr": _trocr,

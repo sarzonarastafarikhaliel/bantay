@@ -399,6 +399,10 @@
         <div class="prediction-label" id="pred-label">{{ result.prediction.incident_type if result and result.prediction.incident_type else '—' }}</div>
         <div class="prediction-conf" id="pred-conf">{% if result and result.prediction.incident_type %}Model check: {{ result.prediction.confidence|confidence_label }}{% elif result %}No suggestion - classifier {{ result.classify_status or 'not reported' }}. Pick the type yourself.{% endif %}</div>
         <p id="pred-reason" style="color: var(--clr-muted); font-size: 0.8rem; margin-top: var(--space-1);">{% if result and result.prediction.reason %}Reason: {{ result.prediction.reason }}{% endif %}</p>
+        <div style="margin: var(--space-2) 0;">
+          <button class="btn btn--ghost btn--sm" type="button" id="rerun-predict-btn">Rerun Classifier</button>
+          <span id="rerun-predict-status" style="color: var(--clr-muted); font-size: 0.8rem; margin-left: var(--space-2);"></span>
+        </div>
         {# Model picker. Only the five checkpoints Chapter 4 measured are offered,
            with their dev-split accuracy shown, so a different answer can be read
            against how accurate that model actually was. Changing it re-runs the
@@ -456,7 +460,7 @@
 
       {% if result %}
       <input type="hidden" name="review_status" value="{{ result.review_status }}">
-      <input type="hidden" name="model_confidence" value="{{ result.prediction.confidence or '' }}">
+      <input type="hidden" id="model_confidence" name="model_confidence" value="{{ result.prediction.confidence or '' }}">
       <input type="hidden" name="source_file_page" value="{{ result.source_file_page }}">
       {% endif %}
     </div>
@@ -690,54 +694,80 @@
     var modelSel     = document.getElementById('pred-model');
     function chosenModel() { return modelSel ? modelSel.value : ''; }
 
+    // Only present after a scan - carries a rerun's confidence into the Save POST.
+    var confidenceEl = document.getElementById('model_confidence');
+    var rerunBtn     = document.getElementById('rerun-predict-btn');
+    var rerunStatus  = document.getElementById('rerun-predict-status');
+
     var debounceTimer;
-    function fetchPrediction() {
+    // onDone(ok, why) - ok is true only when a label came back.
+    function runPrediction(onDone) {
       var text = summaryEl.value.trim();
       if (text.length < 20) {
         predLabel.textContent = '—'; predConf.textContent = ''; predSource.textContent = ''; predReason.textContent = '';
         setAuto(predCategory, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
+        if (onDone) onDone(false, 'Salaysay needs at least 20 characters.');
         return;
       }
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(function () {
-        fetch('{{ url_for("records.predict") }}', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            narrative: text,
-            date: dateEl.value,
-            time: timeEl.value,
-            location_purok: purokEl.value,
-            model: chosenModel(),
-          }),
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (!data.label) {
-            predLabel.textContent = 'No prediction';
-            predConf.textContent = 'No suggestion - classifier ' + (data.status || 'not reported') + '. Pick the type yourself.';
-            predSource.textContent = ''; predReason.textContent = '';
-            setAuto(predCategory, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
-            return;
-          }
-          predLabel.textContent = data.label;
-          predConf.textContent = 'Model check: ' + confidenceLabel(data.confidence) + ' — ' + data.review;
-          predSource.textContent = '(' + (data.model || 'SEA-LION') + ')';
-          predReason.textContent = data.reason ? 'Reason: ' + data.reason : '';
-          setAuto(predCategory, data.category_group);
-          setAuto(predKpStatus, data.kp_status);
-          predKpNote.textContent = data.kp_note || '';
-          if (!primarySel.value) {
-            for (var i = 0; i < primarySel.options.length; i++) {
-              if (primarySel.options[i].value === data.label) {
-                primarySel.selectedIndex = i;
-                break;
-              }
+      fetch('{{ url_for("records.predict") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          narrative: text,
+          date: dateEl.value,
+          time: timeEl.value,
+          location_purok: purokEl.value,
+          model: chosenModel(),
+        }),
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.label) {
+          predLabel.textContent = 'No prediction';
+          predConf.textContent = 'No suggestion - classifier ' + (data.status || 'not reported') + '. Pick the type yourself.';
+          predSource.textContent = ''; predReason.textContent = '';
+          setAuto(predCategory, ''); setAuto(predKpStatus, ''); predKpNote.textContent = '';
+          if (onDone) onDone(false, 'Classifier ' + (data.status || 'did not answer') + '.');
+          return;
+        }
+        predLabel.textContent = data.label;
+        predConf.textContent = 'Model check: ' + confidenceLabel(data.confidence) + ' — ' + data.review;
+        predSource.textContent = '(' + (data.model || 'SEA-LION') + ')';
+        predReason.textContent = data.reason ? 'Reason: ' + data.reason : '';
+        setAuto(predCategory, data.category_group);
+        setAuto(predKpStatus, data.kp_status);
+        predKpNote.textContent = data.kp_note || '';
+        if (confidenceEl) confidenceEl.value = data.confidence;
+        if (!primarySel.value) {
+          for (var i = 0; i < primarySel.options.length; i++) {
+            if (primarySel.options[i].value === data.label) {
+              primarySel.selectedIndex = i;
+              break;
             }
           }
-        })
-        .catch(function () {});
-      }, 600);
+        }
+        if (onDone) onDone(true);
+      })
+      .catch(function () { if (onDone) onDone(false, 'Could not reach the server.'); });
+    }
+
+    function fetchPrediction() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () { runPrediction(); }, 600);
+    }
+
+    // Manual re-run, e.g. after a scan whose SEA-LION call timed out, once
+    // Ollama is back - nothing else re-triggers classification on unchanged text.
+    if (rerunBtn) {
+      rerunBtn.addEventListener('click', function () {
+        clearTimeout(debounceTimer);
+        rerunBtn.disabled = true;
+        rerunStatus.textContent = 'Classifying…';
+        runPrediction(function (ok, why) {
+          rerunBtn.disabled = false;
+          rerunStatus.textContent = ok ? 'Updated just now.' : 'Could not classify - ' + why;
+        });
+      });
     }
 
     summaryEl.addEventListener('input', fetchPrediction);

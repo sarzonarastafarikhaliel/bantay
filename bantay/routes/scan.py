@@ -130,6 +130,23 @@ def _puroks():
         return []
 
 
+_WRAP_HYPHEN_RE = re.compile(r"-[ \t]*\n[ \t]*(?=\S)")
+_WRAP_RE = re.compile(r"(?<!\n)[ \t]*\n(?![ \t]*\n)[ \t]*")
+
+
+def unwrap_lines(text):
+    """Join the Salaysay's hand-wrapped lines back into running prose.
+
+    A line end on the paper is where the ruled line ran out, not a sentence
+    break, but OCR and Gemini both keep it, so the Salaysay arrived as a column
+    of short lines. A single line break becomes a space. A word hyphenated
+    across the break (NAG-/REPORT) is rejoined without one. A blank line still
+    separates paragraphs.
+    """
+    text = _WRAP_HYPHEN_RE.sub("-", (text or "").strip())
+    return _WRAP_RE.sub(" ", text)
+
+
 def guess_fields(text):
     """Cheap deterministic field extraction, used to backfill slots Gemini left
     empty and to fill the template outright when no Gemini backend is configured.
@@ -277,10 +294,9 @@ def run_scan_pipeline(file, backend=None):
     regex_fields = guess_fields(corrected_text)
     recon = reconcile(model_fields, regex_fields)
     fields = reconcile_fields(recon)
-    if not fields["incident_summary"]:
-        # No model extraction (or it declined): the page itself is the summary.
-        # Better a full page in the slot than an empty record.
-        fields["incident_summary"] = corrected_text.strip()
+    # No model extraction (or it declined): the page itself is the summary.
+    # Better a full page in the slot than an empty record.
+    fields["incident_summary"] = unwrap_lines(fields["incident_summary"] or corrected_text)
     blank_slots = narrative.missing(fields)
     field_disagreements = disagreements(recon)
     templated = narrative.render(fields)
